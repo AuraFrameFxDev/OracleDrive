@@ -264,7 +264,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkStoragePermissionAndPickFile() {
         if (hasStoragePermissions()) {
-            filePicker.launch(FILE_PICKER_MIME_TYPE)
+            filePicker.launch(FILE_PICKER_MIME_TYPES[0])
         } else {
             requestStoragePermissions()
         }
