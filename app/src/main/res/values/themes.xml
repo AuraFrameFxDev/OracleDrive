@@ -2,87 +2,66 @@
 <resources>
     <!-- Base application theme -->
     <style name="Theme.GenesisAndroidApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand colors -->
+        <!-- Color palette -->
         <item name="colorPrimary">@color/terminal_fg</item>
         <item name="colorPrimaryVariant">@color/terminal_accent</item>
-        <item name="colorOnPrimary">@color/black</item>
-
-        <!-- Secondary brand colors -->
+        <item name="colorOnPrimary">@android:color/black</item>
         <item name="colorSecondary">@color/terminal_accent</item>
         <item name="colorSecondaryVariant">@color/terminal_highlight</item>
-        <item name="colorOnSecondary">@color/black</item>
+        <item name="colorOnSecondary">@android:color/black</item>
+        <item name="android:windowBackground">@color/background</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/terminal_fg</item>
 
         <!-- Status bar -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/background</item>
-
-        <!-- Background -->
-        <item name="android:windowBackground">@color/background</item>
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/terminal_fg</item>
+        <item name="android:windowLightNavigationBar">false</item>
 
         <!-- Text colors -->
         <item name="android:textColorPrimary">@color/terminal_fg</item>
         <item name="android:textColorSecondary">@color/terminal_highlight</item>
         <item name="android:textColor">@color/terminal_fg</item>
 
-        <!-- Dialog -->
+        <!-- Dialogs -->
         <item name="alertDialogTheme">@style/ThemeOverlay.MaterialComponents.Dialog.Alert</item>
         <item name="dialogTheme">@style/ThemeOverlay.MaterialComponents.Dialog</item>
 
-        <!-- Material Components -->
-        <item name="materialButtonStyle">@style/Widget.GenesisAndroidApp.Button</item>
-        <item name="editTextStyle">@style/Widget.GenesisAndroidApp.EditText</item>
-        <item name="textInputStyle">@style/Widget.GenesisAndroidApp.TextInputLayout.OutlinedBox</item>
-        
-        <!-- CardView -->
-        <item name="cardViewStyle">@style/Widget.GenesisAndroidApp.CardView</item>
-    </style>
+        <!-- Material Components Styles -->
+        <item name="materialButtonStyle">@style/Widget.MaterialComponents.Button</item>
+        <item name="editTextStyle">@style/Widget.MaterialComponents.TextInputEditText</item>
+        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox
+        </item>
+        <item name="cardViewStyle">@style/Widget.MaterialComponents.CardView</item>
 
-    <!-- Button Style -->
-    <style name="Widget.GenesisAndroidApp.Button" parent="Widget.MaterialComponents.Button">
-        <item name="backgroundTint">@color/terminal_accent</item>
-        <item name="android:textColor">@color/black</item>
-        <item name="android:padding">12dp</item>
-        <item name="android:textAllCaps">false</item>
-        <item name="cornerRadius">4dp</item>
-    </style>
-
-    <!-- EditText Style -->
-    <style name="Widget.GenesisAndroidApp.EditText" parent="Widget.MaterialComponents.TextInputEditText">
-        <item name="android:textColor">@color/terminal_fg</item>
-        <item name="android:textColorHint">@color/terminal_highlight</item>
-        <item name="android:background">@null</item>
-    </style>
-    
-    <!-- TextInputLayout Style -->
-    <style name="Widget.GenesisAndroidApp.TextInputLayout.OutlinedBox" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxStrokeColor">@color/terminal_accent</item>
+        <!-- TextInputLayout -->
+        <item name="boxBackgroundMode">outline</item>
         <item name="boxStrokeWidth">1dp</item>
-        <item name="boxCornerRadiusTopStart">4dp</item>
-        <item name="boxCornerRadiusTopEnd">4dp</item>
-        <item name="boxCornerRadiusBottomStart">4dp</item>
-        <item name="boxCornerRadiusBottomEnd">4dp</item>
+        <item name="boxStrokeColor">@color/terminal_accent</item>
         <item name="hintTextColor">@color/terminal_highlight</item>
-        <item name="hintTextAppearance">@style/TextAppearance.GenesisAndroidApp.Hint</item>
-    </style>
-    
-    <!-- CardView Style -->
-    <style name="Widget.GenesisAndroidApp.CardView" parent="Widget.MaterialComponents.CardView">
+        <item name="android:textColorHint">@color/terminal_highlight</item>
+
+        <!-- Switch -->
+        <item name="switchStyle">@style/Widget.MaterialComponents.CompoundButton.Switch</item>
+        <item name="switchMaterialStyle">@style/Widget.MaterialComponents.CompoundButton.Switch
+        </item>
+
+        <!-- Button theming -->
+        <item name="materialButtonOutlinedStyle">
+            @style/Widget.MaterialComponents.Button.OutlinedButton
+        </item>
+        <item name="materialButtonTonalStyle">@style/Widget.MaterialComponents.Button.TonalButton
+        </item>
+
+        <!-- CardView theming -->
+        <item name="cardViewStyle">@style/Widget.MaterialComponents.CardView</item>
         <item name="cardBackgroundColor">@color/surface</item>
         <item name="cardElevation">4dp</item>
         <item name="cardCornerRadius">8dp</item>
-        <item name="contentPadding">16dp</item>
     </style>
-    
-    <!-- Text Appearance -->
-    <style name="TextAppearance.GenesisAndroidApp.Hint" parent="TextAppearance.MaterialComponents.Subtitle2">
-        <item name="android:textColor">@color/terminal_highlight</item>
-        <item name="android:textSize">14sp</item>
-    </style>
-    
-    <!-- Terminal Text Appearance -->
+
+    <!-- Terminal Text Appearance (used in code) -->
     <style name="TerminalTextAppearance" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">@color/terminal_fg</item>
         <item name="android:shadowColor">@color/terminal_highlight</item>

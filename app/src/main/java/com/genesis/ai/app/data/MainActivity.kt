@@ -26,6 +26,7 @@ import com.genesis.ai.app.data.model.ImportResponse
 import com.genesis.ai.app.data.model.MessageRequest
 import com.genesis.ai.app.data.model.MessageResponse
 import com.genesis.ai.app.service.GenesisAIService
+import com.google.android.material.switchmaterial.SwitchMaterial
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -74,7 +75,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chatLog: TextView
     private lateinit var messageInput: EditText
     private lateinit var sendButton: Button
-    private lateinit var rootToggle: com.google.android.material.switchmaterial.SwitchMaterial
+    private lateinit var rootToggle: SwitchMaterial
     private lateinit var importButton: Button
     private lateinit var exportButton: Button
     private lateinit var fileManagerButton: Button

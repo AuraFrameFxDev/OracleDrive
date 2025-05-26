@@ -44,7 +44,7 @@
         tools:targetApi="29">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".data.MainActivity"
             android:configChanges="orientation|screenSize"
             android:exported="true">
             <intent-filter>
@@ -62,18 +62,18 @@
         </activity>
 
         <activity
-            android:name=".FileManagerActivity"
+            android:name=".data.FileManagerActivity"
             android:configChanges="orientation|screenSize"
             android:exported="false"
             android:theme="@style/Theme.GenesisAndroidApp" />
 
         <activity
-            android:name=".SettingsActivity"
+            android:name=".ui.SettingsActivity"
             android:exported="false"
             android:theme="@style/Theme.GenesisAndroidApp" />
 
         <service
-            android:name=".GenesisAIService"
+            android:name=".service.GenesisAIService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />

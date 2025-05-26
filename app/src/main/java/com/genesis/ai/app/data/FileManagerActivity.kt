@@ -13,8 +13,6 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -22,6 +20,8 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.genesis.ai.app.R
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -143,9 +143,11 @@ class FileManagerActivity : AppCompatActivity() {
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@FileManagerActivity,
+                        Toast.makeText(
+                            this@FileManagerActivity,
                             getString(R.string.directory_not_found),
-                            Toast.LENGTH_SHORT).show()
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
@@ -311,7 +313,7 @@ class FileManagerActivity : AppCompatActivity() {
             else -> "*/*"
         }
     }
-    
+
     override fun onDestroy() {
         super.onDestroy()
         currentLoadJob?.cancel()
@@ -339,42 +341,43 @@ class FileAdapter(
     }
 
     private val fileComparator = compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase() }
-    
+
     fun updateFiles(newFiles: List<File>) {
         val oldList = files
         files = newFiles.sortedWith(fileComparator)
-        
+
         // Use DiffUtil for efficient updates
-        val diffResult = androidx.recyclerview.widget.DiffUtil.calculateDiff(object : androidx.recyclerview.widget.DiffUtil.Callback() {
+        val diffResult = androidx.recyclerview.widget.DiffUtil.calculateDiff(object :
+            androidx.recyclerview.widget.DiffUtil.Callback() {
             override fun getOldListSize() = oldList.size
             override fun getNewListSize() = files.size
-            
+
             override fun areItemsTheSame(oldPos: Int, newPos: Int): Boolean {
                 return oldList[oldPos].absolutePath == files[newPos].absolutePath
             }
-            
+
             override fun areContentsTheSame(oldPos: Int, newPos: Int): Boolean {
                 val oldFile = oldList[oldPos]
                 val newFile = files[newPos]
-                return oldFile.lastModified() == newFile.lastModified() && 
-                       oldFile.length() == newFile.length() &&
-                       oldFile.name == newFile.name
+                return oldFile.lastModified() == newFile.lastModified() &&
+                        oldFile.length() == newFile.length() &&
+                        oldFile.name == newFile.name
             }
         })
-        
+
         diffResult.dispatchUpdatesTo(this)
     }
-    
+
     fun setSelectedFile(file: File) {
         val previousSelected = selectedFile
         selectedFile = file
-        
+
         // Only update the changed items
         previousSelected?.let { oldFile ->
             val oldPos = files.indexOfFirst { it.absolutePath == oldFile.absolutePath }
             if (oldPos != -1) notifyItemChanged(oldPos)
         }
-        
+
         file?.let { newFile ->
             val newPos = files.indexOfFirst { it.absolutePath == newFile.absolutePath }
             if (newPos != -1) notifyItemChanged(newPos)
@@ -388,9 +391,9 @@ class FileAdapter(
     }
 
     private var lastClickTime: Long = 0
-    
+
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
-        holder.setIsRecyclable(false) // Disable recycling for better stability with file operations
+        holder.isRecyclable = false // Disable recycling for better stability with file operations
         val file = files[position]
         val isSelected = file == selectedFile
 

@@ -1,23 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base application theme - Using Theme.GenesisAndroidApp directly instead -->
-
-    <!-- TextInputLayout Style -->
-    <style name="Widget.GenesisAndroidApp.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
-        <item name="boxStrokeColor">@color/terminal_accent</item>
-        <item name="boxStrokeWidth">1dp</item>
-        <item name="boxCornerRadiusTopStart">4dp</item>
-        <item name="boxCornerRadiusTopEnd">4dp</item>
-        <item name="boxCornerRadiusBottomStart">4dp</item>
-        <item name="boxCornerRadiusBottomEnd">4dp</item>
-        <item name="hintTextColor">@color/terminal_accent</item>
-        <item name="hintTextAppearance">@style/TextAppearance.GenesisAndroidApp.Hint</item>
-        <item name="android:textColorHint">@color/terminal_highlight</item>
+    <!-- Text appearance style used by the app -->
+    <style name="TerminalTextAppearance" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">@color/terminal_fg</item>
-    </style>
-
-    <!-- Hint Text Appearance -->
-    <style name="TextAppearance.GenesisAndroidApp.Hint" parent="TextAppearance.MaterialComponents.Subtitle2">
-        <item name="android:textColor">@color/terminal_accent</item>
+        <item name="android:shadowColor">@color/terminal_highlight</item>
+        <item name="android:shadowDx">0</item>
+        <item name="android:shadowDy">0</item>
+        <item name="android:shadowRadius">10</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:letterSpacing">0.05</item>
     </style>
 </resources>

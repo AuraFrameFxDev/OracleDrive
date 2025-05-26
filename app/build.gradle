@@ -1,85 +1,63 @@
 plugins {
+    // Android and Kotlin
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'org.jetbrains.kotlin.plugin.parcelize'
-    id 'kotlin-kapt'
-    id 'com.google.gms.google-services'  // Google Services plugin
-    id 'com.google.firebase.crashlytics'  // Firebase Crashlytics
-    id 'com.google.firebase.firebase-perf'  // Firebase Performance Monitoring
+    id 'com.google.devtools.ksp'
+
+    // Google Services and Firebase
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
+    id 'com.google.firebase.perf'
+
+    // Google Maps Secrets
+    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+
+    // Navigation Safe Args
+    id 'androidx.navigation.safeargs.kotlin'
+
+    // OSS Licenses
+    id 'com.google.android.gms.oss-licenses-plugin'
 }
 
 android {
     namespace 'com.genesis.ai.app'
     compileSdk 35
-    
-    buildFeatures {
-        viewBinding true
-        buildConfig true
-    }
 
-    buildTypes {
-        debug {
-            applicationIdSuffix ".debug"
-            debuggable true
-        }
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-    
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-    
-    kotlinOptions {
-        jvmTarget = '17'
-    }
-    
-    packagingOptions {
-        // Exclude unnecessary files from the APK
-
-        // Handle native libraries
-        jniLibs {
-            useLegacyPackaging = true  // Use the old packaging system for native libs
-        }
-    }
+    // Match working APK build versions
+    buildToolsVersion "34.0.0"
 
     defaultConfig {
         applicationId "com.genesis.ai.app"
-        minSdk 26  // Android 8.0 (Oreo)
-        targetSdk 35  // Android 15
+        minSdk 33
+        targetSdk 35
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testApplicationId "com.genesis.ai.app.test"
+
+        // Enable vector drawables
         vectorDrawables.useSupportLibrary = true
 
-        // Enable multidex support for older devices
+        // Enable multidex
         multiDexEnabled true
     }
 
     buildTypes {
         debug {
-            applicationIdSuffix ".debug"  // This adds .debug to the package name
+            applicationIdSuffix ".debug"
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             debuggable true
         }
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
-    // Ensure consistent package names across build variants
-    applicationVariants.all { variant ->
-        variant.outputs.all {
-            outputFileName = "app-${variant.baseName}-${variant.versionName}.apk"
-        }
-    }
-
     compileOptions {
-        // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -89,37 +67,59 @@ android {
         jvmTarget = '17'
         freeCompilerArgs += [
                 '-Xjvm-default=all',
-                '-opt-in=kotlin.RequiresOptIn',
-                '-Xcontext-receivers'
+                '-opt-in=kotlin.RequiresOptIn'
         ]
     }
+
     packagingOptions {
+        jniLibs {
+            useLegacyPackaging = true
+        }
         resources {
-            excludes += ['/META-INF/{AL2.0,LGPL2.1}', 'META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0', 'META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0', 'META-INF/AL2.0', 'META-INF/LGPL2.1']
+            pickFirsts += [
+                    'META-INF/AL2.0',
+                    'META-INF/LGPL2.1'
+            ]
+            excludes += [
+                    'META-INF/DEPENDENCIES',
+                    'META-INF/LICENSE',
+                    'META-INF/LICENSE.txt',
+                    'META-INF/license.txt',
+                    'META-INF/NOTICE',
+                    'META-INF/NOTICE.txt',
+                    'META-INF/notice.txt',
+                    'META-INF/ASL2.0',
+                    'META-INF/AL2.0',
+                    'META-INF/LGPL2.1',
+                    'META-INF/*.kotlin_module'
+            ]
         }
     }
 
     buildFeatures {
         viewBinding true
         buildConfig true
+        compose true
     }
 
-    buildTypes.configureEach {
-        // Configure build types here if needed
+    // Configure KSP
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
+        arg("room.incremental", "true")
+        arg("room.generateKotlin", "true")
+        arg("room.compiler.incremental", "true")
     }
 
+    configurations.all {
+        resolutionStrategy {
+            // Force specific versions if needed
+            // force 'androidx.core:core-ktx:1.16.0'
+            // force 'androidx.appcompat:appcompat:1.7.0'
 
-    androidResources {
-        additionalParameters = ['--no-version-vectors']
+            // Enable dependency verification (optional)
+            // failOnVersionConflict()
+        }
     }
-
-    // Enable ViewBinding for all build variants
-    buildFeatures {
-        viewBinding true
-    }
-}
-
-configurations.configureEach {
     resolutionStrategy {
         // Force specific versions if needed
         // force 'androidx.core:core-ktx:1.16.0'
@@ -132,56 +132,75 @@ configurations.configureEach {
 
 dependencies {
     // Kotlin
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.21"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0"
-    
-    // Firebase
-    implementation platform('com.google.firebase:firebase-bom:33.14.0')
-    implementation 'com.google.firebase:firebase-analytics-ktx'
-    implementation 'com.google.firebase:firebase-crashlytics-ktx'
-    implementation 'com.google.firebase:firebase-perf-ktx'
-    implementation 'com.google.firebase:firebase-messaging-ktx'
-    implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation libs.kotlin.stdlib
+    implementation libs.coroutines.android
+    implementation libs.coroutines.play.services
+
+    // Firebase BOM (Bill of Materials) - Single BOM import for all Firebase dependencies
+    implementation platform(libs.firebase.bom)
+
+    // Firebase dependencies (using BOM)
+    implementation libs.firebase.analytics.ktx
+    implementation libs.firebase.crashlytics.ktx
+    implementation libs.firebase.perf.ktx
+    implementation libs.firebase.auth.ktx
+    implementation libs.firebase.firestore.ktx
+    implementation libs.firebase.messaging.ktx
+    implementation libs.firebase.storage
+    implementation libs.firebase.database
+
+    // Google Play Services
+    implementation libs.play.services.auth
+    implementation libs.play.services.location
+    implementation libs.play.services.maps
+    implementation libs.play.services.drive
+    implementation libs.play.services.drive.ui
 
     // Navigation
-    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.7'
-    implementation 'androidx.navigation:navigation-ui-ktx:2.7.7'
+    implementation libs.navigation.fragment
+    implementation libs.navigation.ui
+    implementation libs.navigation.dynamic.features.fragment
 
     // Core AndroidX
-    implementation 'androidx.core:core-ktx:1.12.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    
-    // Material Components (must be 1.11.0 or higher for Material3)
-    implementation 'com.google.android.material:material:1.12.0'
-    
+    implementation libs.core.ktx
+    implementation libs.appcompat
+    implementation libs.material
+
     // AndroidX UI
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
-    implementation 'androidx.recyclerview:recyclerview:1.3.2'
-    implementation 'androidx.cardview:cardview:1.0.0'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.multidex:multidex:2.0.1'
+    implementation libs.constraintlayout
+    implementation libs.recyclerview
+    implementation libs.cardview
+    implementation libs.legacy.support
+    implementation libs.multidex
 
     // Lifecycle components
-    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
-    implementation 'androidx.lifecycle:lifecycle-common-java8:2.7.0'
+    implementation libs.lifecycle.viewmodel
+    implementation libs.lifecycle.livedata
+    implementation libs.lifecycle.runtime
+    implementation libs.lifecycle.common
+    implementation libs.lifecycle.process
 
-    // Desugaring
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+    // Desugaring for Java 8+ APIs
+    coreLibraryDesugaring libs.desugar.jdk.libs
 
     // Retrofit & Network
-    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
-    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.14'
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.14'
+    implementation libs.retrofit
+    implementation libs.retrofit.converter.gson
+    implementation libs.okhttp
+    implementation libs.logging.interceptor.v4120
 
     // Testing
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    // Add WorkManager for background tasks if needed
-    // implementation 'androidx.work:work-runtime-ktx:2.9.0'
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+
+    // WorkManager
+    implementation libs.work.runtime.ktx
+
+    // Glide for image loading
+    implementation libs.glide
+    ksp libs.compiler
+
+    // Timber for logging
+    implementation libs.timber
 }
