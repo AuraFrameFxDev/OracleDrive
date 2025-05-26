@@ -1,6 +1,9 @@
 # Use official Python image as base
 FROM python:3.11-slim
 
+# Create a non-root user
+RUN adduser --disabled-password --gecos '' appuser
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -30,7 +33,10 @@ RUN poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --no-root
 
 # Copy the rest of the application
-COPY . .
+COPY --chown=appuser:appuser . .
+
+# Switch to non-root user
+USER appuser
 
 # Expose the port the app runs on
 EXPOSE 8000

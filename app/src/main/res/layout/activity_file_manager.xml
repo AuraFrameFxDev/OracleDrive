@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -18,9 +19,9 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:drawableStart="@android:drawable/ic_menu_manage"
+            app:drawableStartCompat="@android:drawable/ic_menu_manage"
             android:drawablePadding="8dp"
-            android:drawableTint="#04DDFA"
+            app:drawableTint="#04DDFA"
             android:gravity="center_vertical"
             android:text="Project Files"
             android:textColor="#04DDFA"
@@ -34,7 +35,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Settings"
             android:src="@drawable/ic_settings"
-            android:tint="#04DDFA" />
+            app:tint="#04DDFA" />
     </LinearLayout>
 
     <LinearLayout
@@ -52,9 +53,9 @@
             android:layout_marginEnd="4dp"
             android:layout_weight="1"
             android:backgroundTint="#1A5276"
-            android:drawableStart="@android:drawable/ic_menu_upload"
+            app:drawableStartCompat="@android:drawable/ic_menu_upload"
             android:drawablePadding="4dp"
-            android:drawableTint="#04DDFA"
+            app:drawableTint="#04DDFA"
             android:padding="8dp"
             android:text="Import"
             android:textColor="#04DDFA" />
@@ -67,9 +68,9 @@
             android:layout_marginStart="4dp"
             android:layout_weight="1"
             android:backgroundTint="#1A5276"
-            android:drawableStart="@android:drawable/ic_menu_save"
+            app:drawableStartCompat="@android:drawable/ic_menu_save"
             android:drawablePadding="4dp"
-            android:drawableTint="#04DDFA"
+            app:drawableTint="#04DDFA"
             android:padding="8dp"
             android:text="Export"
             android:textColor="#04DDFA" />

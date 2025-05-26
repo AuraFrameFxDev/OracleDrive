@@ -1,4 +1,19 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // Google Services plugin (for Firebase and other Google services)
+        classpath 'com.google.gms:google-services:4.4.2'  // Latest stable version
+        
+        // Firebase plugins
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.3'
+        classpath 'com.google.firebase:perf-plugin:1.4.2'
+    }
+}
+
 plugins {
     id 'com.android.application' version '8.10.0' apply false
     id 'com.android.library' version '8.10.0' apply false

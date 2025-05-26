@@ -7,15 +7,17 @@ services:
       dockerfile: docker/Dockerfile
     container_name: genesis-backend
     restart: unless-stopped
+    user: "${UID}:${GID}"
     ports:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
       - ENVIRONMENT=development
+      - PYTHONPATH=/app
     volumes:
       - ../:/app
     working_dir: /app
-    command: uvicorn server.app:app --host 0.0.0.0 --port 8000 --reload
+    command: sh -c "chown -R appuser:appuser /app && uvicorn server.app:app --host 0.0.0.0 --port 8000 --reload"
 
   # Uncomment to add PostgreSQL database
   # db:
