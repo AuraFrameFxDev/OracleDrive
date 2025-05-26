@@ -43,13 +43,12 @@
             android:name=".data.MainActivity"
             android:configChanges="orientation|screenSize"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        
         <activity
             android:name=".data.FileManagerActivity"
             android:configChanges="orientation|screenSize"

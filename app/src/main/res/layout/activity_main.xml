@@ -63,7 +63,7 @@
                 android:textColorHint="#4DB6AC" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Buttons Row -->
+        <!-- Buttons Row 1 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -125,6 +125,36 @@
                 android:minHeight="48dp"
                 android:paddingHorizontal="16dp"
                 android:text="@string/export_chat"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                app:rippleColor="#7F05E1FB"
+                app:strokeColor="#1E88E5"
+                app:strokeWidth="1dp" />
+        </LinearLayout>
+
+        <!-- Buttons Row 2 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:baselineAligned="false"
+            android:orientation="horizontal"
+            android:weightSum="10">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/fileManagerButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="10"
+                android:backgroundTint="#2E7D32"
+                android:contentDescription="Open File Manager"
+                android:focusable="true"
+                android:minWidth="88dp"
+                android:minHeight="48dp"
+                android:paddingHorizontal="16dp"
+                android:text="Open File Manager"
                 android:textAllCaps="false"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp"

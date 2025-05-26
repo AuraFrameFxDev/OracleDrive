@@ -166,11 +166,13 @@ class MainActivity : AppCompatActivity() {
         sendButton = findViewById(R.id.sendButton)
         rootToggle = findViewById(R.id.rootToggle)
         exportButton = findViewById(R.id.exportButton)
+        fileManagerButton = findViewById(R.id.fileManagerButton)
         aiQuestions = findViewById(R.id.aiQuestions)
 
         // Set up click listeners
         sendButton.setOnClickListener { sendMessage() }
         exportButton.setOnClickListener { checkPermissionsAndExport() }
+        fileManagerButton.setOnClickListener { openFileManager() }
         
         // Initialize the service after UI is ready
         initializeService()
@@ -239,8 +241,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openFileManager() {
-        val intent = Intent(this, FileManagerActivity::class.java)
-        fileManagerLauncher.launch(intent)
+        try {
+            val intent = Intent(this, FileManagerActivity::class.java)
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(this, "File manager not available: ${e.message}", Toast.LENGTH_SHORT).show()
+            e.printStackTrace()
+        }
     }
 
     private fun exportChatToFile() {
