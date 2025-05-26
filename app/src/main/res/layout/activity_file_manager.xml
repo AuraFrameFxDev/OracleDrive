@@ -4,9 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#032831"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:theme="@style/Theme.GenesisAndroidApp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -23,7 +23,7 @@
             android:drawablePadding="8dp"
             app:drawableTint="#04DDFA"
             android:gravity="center_vertical"
-            android:text="Project Files"
+            android:text="@string/file_manager_title"
             android:textColor="#04DDFA"
             android:textSize="20sp"
             android:textStyle="bold" />
@@ -33,7 +33,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Settings"
+            android:contentDescription="@string/settings"
             android:src="@drawable/ic_settings"
             app:tint="#04DDFA" />
     </LinearLayout>
@@ -57,7 +57,7 @@
             android:drawablePadding="4dp"
             app:drawableTint="#04DDFA"
             android:padding="8dp"
-            android:text="Import"
+            android:text="@string/import_file"
             android:textColor="#04DDFA" />
 
         <Button
@@ -72,7 +72,7 @@
             android:drawablePadding="4dp"
             app:drawableTint="#04DDFA"
             android:padding="8dp"
-            android:text="Export"
+            android:text="@string/export"
             android:textColor="#04DDFA" />
     </LinearLayout>
 
@@ -112,7 +112,7 @@
             android:layout_weight="1"
             android:backgroundTint="#5D6D7E"
             android:padding="8dp"
-            android:text="Cancel"
+            android:text="@string/cancel"
             android:textColor="#FFFFFF" />
 
         <Button
@@ -125,7 +125,7 @@
             android:backgroundTint="#1E8449"
             android:enabled="false"
             android:padding="8dp"
-            android:text="Select"
+            android:text="@string/select_file"
             android:textColor="#FFFFFF" />
     </LinearLayout>
 </LinearLayout>

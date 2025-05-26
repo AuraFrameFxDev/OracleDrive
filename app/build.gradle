@@ -13,12 +13,13 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.genesis.ai.app"
-        minSdk = 26  // Android 8.0 (Oreo)
-        targetSdk = 35  // Android 15
-        versionCode = 1
-        versionName = "1.0"
+        applicationId "com.genesis.ai.app"
+        minSdk 26  // Android 8.0 (Oreo)
+        targetSdk 35  // Android 15
+        versionCode 1
+        versionName "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testApplicationId "com.genesis.ai.app.test"
         vectorDrawables.useSupportLibrary = true
 
         // Enable multidex support for older devices
@@ -26,15 +27,20 @@ android {
     }
 
     buildTypes {
-        release {
-            minifyEnabled true
-            proguardFiles(getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro')
-            signingConfig signingConfigs.debug  // Temporary for testing
-        }
         debug {
-            minifyEnabled false
+            applicationIdSuffix ".debug"  // This adds .debug to the package name
             debuggable true
-            applicationIdSuffix ".debug"
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    
+    // Ensure consistent package names across build variants
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "app-${variant.baseName}-${variant.versionName}.apk"
         }
     }
 
@@ -112,23 +118,23 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth-ktx'  // For Authentication
     implementation 'com.google.firebase:firebase-firestore-ktx'  // For Firestore
     // Kotlin
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.8.21'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.8.21'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.21'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.1.21'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 
     // AndroidX
-    implementation 'androidx.core:core-ktx:1.10.1'
+    implementation 'androidx.core:core-ktx:1.16.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'  // Latest stable
-    implementation 'androidx.recyclerview:recyclerview:1.4.0'  // Latest stable
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'  // Updated to latest stable
+    implementation 'androidx.recyclerview:recyclerview:1.4.0'  // Updated to latest stable
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.multidex:multidex:2.0.1'  // For multidex support
 
     // Lifecycle
-    def lifecycle_version = "2.9.0"  // Latest stable
+    def lifecycle_version = "2.9.0"  // Updated to latest stable
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
@@ -142,7 +148,7 @@ dependencies {
 
     // Testing
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.2.0'  // Keep at 1.2.0 (1.2.1 is alpha)
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'  // Updated to latest stable
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'  // Latest stable version
 
     // Add WorkManager for background tasks if needed

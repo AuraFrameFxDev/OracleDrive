@@ -3,13 +3,13 @@
     <style name="Theme.GenesisAndroidApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <!-- Primary brand colors -->
         <item name="colorPrimary">@color/terminal_fg</item>
-        <item name="colorPrimaryVariant">@color/teal_700</item>
-        <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorPrimaryVariant">@color/terminal_accent</item>
+        <item name="colorOnPrimary">@color/black</item>
 
         <!-- Secondary brand colors -->
         <item name="colorSecondary">@color/terminal_accent</item>
-        <item name="colorSecondaryVariant">@color/purple_700</item>
-        <item name="colorOnSecondary">@color/on_primary</item>
+        <item name="colorSecondaryVariant">@color/terminal_highlight</item>
+        <item name="colorOnSecondary">@color/black</item>
 
         <!-- Status bar -->
         <item name="android:statusBarColor">@android:color/transparent</item>
@@ -19,7 +19,7 @@
         <!-- Background -->
         <item name="android:windowBackground">@color/background</item>
         <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorOnSurface">@color/terminal_fg</item>
 
         <!-- Text colors -->
         <item name="android:textColorPrimary">@color/terminal_fg</item>
@@ -27,13 +27,13 @@
         <item name="android:textColor">@color/terminal_fg</item>
 
         <!-- Dialog -->
-        <item name="alertDialogTheme">@style/TerminalDialogTheme</item>
-        <item name="dialogTheme">@style/TerminalDialogTheme</item>
+        <item name="alertDialogTheme">@style/ThemeOverlay.AppCompat.Dark</item>
+        <item name="dialogTheme">@style/ThemeOverlay.AppCompat.Dialog</item>
 
         <!-- Material Components -->
         <item name="materialButtonStyle">@style/Widget.GenesisAndroidApp.Button</item>
         <item name="editTextStyle">@style/Widget.GenesisAndroidApp.EditText</item>
-        <item name="textInputStyle">@style/Widget.GenesisAndroidApp.TextInputLayout</item>
+        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
     </style>
 
     <!-- Button Style -->
