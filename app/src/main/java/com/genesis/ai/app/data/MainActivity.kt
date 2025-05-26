@@ -20,6 +20,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.genesis.ai.app.R
 import com.genesis.ai.app.data.model.GenesisRepositoryNew
@@ -42,6 +43,9 @@ private const val MIME_TYPE = "application/octet-stream"
 private const val FILE_PICKER_MIME_TYPE = "*/*"
 
 class MainActivity : AppCompatActivity() {
+    companion object {
+        private const val REQUEST_CODE_WRITE_STORAGE = 1001
+    }
     private val messageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == GenesisAIService.PROACTIVE_MESSAGE_ACTION) {
@@ -53,7 +57,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chatLog: TextView
     private lateinit var messageInput: EditText
     private lateinit var sendButton: Button
-    private lateinit var rootToggle: Switch
+    private lateinit var rootToggle: com.google.android.material.switchmaterial.SwitchMaterial
     private lateinit var importButton: Button
     private lateinit var exportButton: Button
     private lateinit var fileManagerButton: Button
@@ -156,9 +160,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Start the service when the activity is created
-        GenesisAIService.startService(this)
-
+        // Initialize views
         chatLog = findViewById(R.id.chatLog)
         messageInput = findViewById(R.id.messageInput)
         sendButton = findViewById(R.id.sendButton)
@@ -168,10 +170,54 @@ class MainActivity : AppCompatActivity() {
 
         // Set up click listeners
         sendButton.setOnClickListener { sendMessage() }
-        exportButton.setOnClickListener { exportChatToFile() }
-
-        // Note: importButton and fileManagerButton are not in the layout
-        // If you want to use them, add them to the layout file first
+        exportButton.setOnClickListener { checkPermissionsAndExport() }
+        
+        // Initialize the service after UI is ready
+        initializeService()
+    }
+    
+    private fun checkPermissionsAndExport() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU || 
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            exportChatToFile()
+        } else {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                REQUEST_CODE_WRITE_STORAGE
+            )
+        }
+    }
+    
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == REQUEST_CODE_WRITE_STORAGE && 
+            grantResults.isNotEmpty() && 
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        ) {
+            exportChatToFile()
+        } else {
+            Toast.makeText(this, "Storage permission is required to export chat", Toast.LENGTH_SHORT).show()
+        }
+    }
+    
+    private fun initializeService() {
+        try {
+            // Start the service when the activity is created
+            GenesisAIService.startService(this)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Continue with the app even if service fails to start
+            Toast.makeText(this, "Background service could not start", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun checkStoragePermissionAndPickFile() {
@@ -243,8 +289,8 @@ class MainActivity : AppCompatActivity() {
                     this,
                     arrayOf(file.absolutePath),
                     null
-                ) { path, uri ->
-                    // Media scan completed
+                ) { _, _ ->
+                    // Media scan completed - parameters intentionally unused
                 }
 
                 Toast.makeText(
@@ -279,7 +325,7 @@ class MainActivity : AppCompatActivity() {
                         if (responseBody != null) {
                             updateChatLog(
                                 message,
-                                responseBody.message ?: "No response from server"
+                                responseBody.message
                             )
                         } else {
                             updateChatLog(message, "Error: Empty response from server")

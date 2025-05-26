@@ -58,8 +58,14 @@ class GenesisAIService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        startForeground(NOTIFICATION_ID, createNotification())
-        startProactiveMessaging()
+        try {
+            startForeground(NOTIFICATION_ID, createNotification())
+            startProactiveMessaging()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Try to recover by stopping self to prevent ANR
+            stopSelf()
+        }
     }
 
     private fun startProactiveMessaging() {
@@ -132,17 +138,25 @@ class GenesisAIService : Service() {
 
     private fun createNotificationChannel() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            val serviceChannel = NotificationChannel(
-                CHANNEL_ID,
-                "Genesis AI Service",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Background service for Genesis AI proactive messaging"
-                setShowBadge(false)
-            }
+            try {
+                val serviceChannel = NotificationChannel(
+                    CHANNEL_ID,
+                    "Genesis AI Service",
+                    NotificationManager.IMPORTANCE_LOW
+                ).apply {
+                    description = "Background service for Genesis AI proactive messaging"
+                    setShowBadge(false)
+                    // Set no sound and no vibration for the notification channel
+                    setSound(null, null)
+                    enableVibration(false)
+                }
 
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(serviceChannel)
+                val manager = getSystemService(NotificationManager::class.java)
+                manager?.createNotificationChannel(serviceChannel)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                // Continue without notification channel if there's an error
+            }
         }
     }
 }
