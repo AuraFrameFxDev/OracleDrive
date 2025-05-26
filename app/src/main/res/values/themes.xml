@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base application theme -->
     <style name="Theme.GenesisAndroidApp" parent="Theme.MaterialComponents.DayNight.NoActionBar">
@@ -80,18 +81,9 @@
         <item name="android:textColor">@color/terminal_highlight</item>
         <item name="android:textSize">14sp</item>
     </style>
-</resources>
-
-    <!-- CardView Style -->
-    <style name="Widget.GenesisAndroidApp.CardView" parent="@style/Widget.MaterialComponents.CardView">
-        <item name="cardBackgroundColor">@color/surface</item>
-        <item name="cardElevation">4dp</item>
-        <item name="cardCornerRadius">8dp</item>
-        <item name="contentPadding">16dp</item>
-    </style>
-
-    <!-- Text Appearance -->
-    <style name="TerminalTextAppearance" parent="TextAppearance.AppCompat.Body1">
+    
+    <!-- Terminal Text Appearance -->
+    <style name="TerminalTextAppearance" parent="TextAppearance.MaterialComponents.Body1">
         <item name="android:textColor">@color/terminal_fg</item>
         <item name="android:shadowColor">@color/terminal_highlight</item>
         <item name="android:shadowDx">0</item>
@@ -99,6 +91,8 @@
         <item name="android:shadowRadius">10</item>
         <item name="android:textSize">14sp</item>
         <item name="android:fontFamily">monospace</item>
+    </style>
+</resources>
         <item name="android:letterSpacing">0.05</item>
     </style>
 
