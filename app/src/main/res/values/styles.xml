@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="AppTheme" parent="Theme.GenesisAndroidApp">
+        <item name="android:textViewStyle">@style/Widget.GenesisAndroidApp.TextView</item>
+        <item name="editTextStyle">@style/Widget.GenesisAndroidApp.EditText</item>
+        <item name="buttonStyle">@style/Widget.GenesisAndroidApp.Button</item>
+        <item name="materialButtonStyle">@style/Widget.GenesisAndroidApp.Button</item>
+        <item name="android:listViewStyle">@style/Widget.GenesisAndroidApp.ListView</item>
+        <item name="android:progressBarStyle">@style/Widget.GenesisAndroidApp.ProgressBar</item>
+    </style>
+
+    <!-- TextView Style -->
+    <style name="Widget.GenesisAndroidApp.TextView" parent="@android:style/Widget.DeviceDefault.TextView">
+        <item name="android:textAppearance">@style/TerminalTextAppearance</item>
+        <item name="android:textColor">@color/terminal_fg</item>
+        <item name="android:fontFamily">monospace</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+
+    <!-- ListView Style -->
+    <style name="Widget.GenesisAndroidApp.ListView" parent="@android:style/Widget.DeviceDefault.ListView">
+        <item name="android:background">@color/background</item>
+        <item name="android:divider">@color/terminal_accent</item>
+        <item name="android:dividerHeight">1dp</item>
+    </style>
+
+    <!-- ProgressBar Style -->
+    <style name="Widget.GenesisAndroidApp.ProgressBar" parent="@android:style/Widget.DeviceDefault.ProgressBar">
+        <item name="android:indeterminateTint">@color/terminal_fg</item>
+        <item name="android:progressTint">@color/terminal_accent</item>
+    </style>
+
+    <!-- Switch Style -->
+    <style name="Widget.GenesisAndroidApp.Switch" parent="@style/Widget.AppCompat.CompoundButton.Switch">
+        <item name="android:thumbTint">@color/terminal_fg</item>
+        <item name="android:trackTint">@color/terminal_accent</item>
+    </style>
+
+    <!-- Toolbar Style -->
+    <style name="Widget.GenesisAndroidApp.Toolbar" parent="@style/Widget.AppCompat.Toolbar">
+        <item name="titleTextColor">@color/terminal_fg</item>
+        <item name="subtitleTextColor">@color/terminal_highlight</item>
+        <item name="android:background">@color/surface</item>
+    </style>
+
+    <!-- Dialog Theme -->
+    <style name="TerminalDialogTheme" parent="@style/Theme.AppCompat.DayNight.Dialog.Alert">
+        <item name="colorBackgroundFloating">@color/surface</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:textColorPrimary">@color/terminal_fg</item>
+        <item name="android:textColor">@color/terminal_fg</item>
+        <item name="android:textColorHint">@color/terminal_fg</item>
+    </style>
+
+    <!-- TextInputLayout Style -->
+    <style name="Widget.GenesisAndroidApp.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/terminal_accent</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxCornerRadiusTopStart">4dp</item>
+        <item name="boxCornerRadiusTopEnd">4dp</item>
+        <item name="boxCornerRadiusBottomStart">4dp</item>
+        <item name="boxCornerRadiusBottomEnd">4dp</item>
+        <item name="hintTextColor">@color/terminal_accent</item>
+        <item name="hintTextAppearance">@style/TextAppearance.GenesisAndroidApp.Hint</item>
+        <item name="android:textColorHint">@color/terminal_highlight</item>
+        <item name="android:textColor">@color/terminal_fg</item>
+    </style>
+
+    <!-- Hint Text Appearance -->
+    <style name="TextAppearance.GenesisAndroidApp.Hint" parent="TextAppearance.MaterialComponents.Subtitle2">
+        <item name="android:textColor">@color/terminal_accent</item>
+    </style>
+</resources>

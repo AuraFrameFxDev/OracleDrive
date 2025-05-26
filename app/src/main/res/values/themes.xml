@@ -71,6 +71,17 @@
         <item name="android:fontFamily">monospace</item>
         <item name="android:letterSpacing">0.05</item>
     </style>
-
+    <!-- TextInputLayout Style -->
+    <style name="Widget.GenesisAndroidApp.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/terminal_accent</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxCornerRadiusTopStart">4dp</item>
+        <item name="boxCornerRadiusTopEnd">4dp</item>
+        <item name="boxCornerRadiusBottomStart">4dp</item>
+        <item name="boxCornerRadiusBottomEnd">4dp</item>
+        <item name="hintTextColor">@color/terminal_highlight</item>
+        <item name="android:textColorHint">@color/terminal_highlight</item>
+        <item name="android:textColor">@color/terminal_fg</item>
+    </style>
     <!-- Dialog Theme reference - defined in styles.xml -->
 </resources>
