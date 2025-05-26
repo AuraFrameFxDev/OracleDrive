@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#032831"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:drawableStart="@android:drawable/ic_menu_manage"
+        android:drawablePadding="8dp"
+        android:drawableTint="#04DDFA"
+        android:gravity="center_vertical"
+        android:paddingBottom="16dp"
+        android:text="Project Files"
+        android:textColor="#04DDFA"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingBottom="8dp">
+
+        <Button
+            android:id="@+id/btnImportFile"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:backgroundTint="#1A5276"
+            android:drawableStart="@android:drawable/ic_menu_upload"
+            android:drawablePadding="4dp"
+            android:drawableTint="#04DDFA"
+            android:padding="8dp"
+            android:text="Import"
+            android:textColor="#04DDFA" />
+
+        <Button
+            android:id="@+id/btnExportFile"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:backgroundTint="#1A5276"
+            android:drawableStart="@android:drawable/ic_menu_save"
+            android:drawablePadding="4dp"
+            android:drawableTint="#04DDFA"
+            android:padding="8dp"
+            android:text="Export"
+            android:textColor="#04DDFA" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvCurrentPath"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ellipsize="end"
+        android:paddingVertical="8dp"
+        android:singleLine="true"
+        android:textColor="#05E1FB"
+        android:textSize="12sp"
+        tools:text="/storage/emulated/0/GenComm" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvFiles"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:scrollbars="vertical" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="8dp">
+
+        <Button
+            android:id="@+id/btnCancel"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="1"
+            android:backgroundTint="#5D6D7E"
+            android:padding="8dp"
+            android:text="Cancel"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btnSelect"
+            style="@style/Widget.AppCompat.Button.Borderless"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_weight="1"
+            android:backgroundTint="#1E8449"
+            android:enabled="false"
+            android:padding="8dp"
+            android:text="Select"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</LinearLayout>

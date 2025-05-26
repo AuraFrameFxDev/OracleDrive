@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:overScrollMode="ifContentScrolls">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#032831"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- AI Status -->
+        <TextView
+            android:id="@+id/aiQuestions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#181717"
+            android:fontFamily="@font/pixelify_sans_medium"
+            android:padding="12dp"
+            android:text="@string/genesis_status_online"
+            android:textColor="#08DDF8"
+            android:textSize="16sp" />
+
+        <!-- Chat Log -->
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            android:layout_marginTop="8dp"
+            android:background="#070707"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/chatLog"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:textColor="#07D8F2"
+                android:textSize="12sp" />
+        </androidx.core.widget.NestedScrollView>
+
+        <!-- Message Input -->
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:boxBackgroundColor="#0A3D62"
+            app:boxStrokeColor="#1E88E5"
+            app:hintTextColor="#05E1FB">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/messageInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/type_your_message"
+                android:inputType="textMultiLine|textCapSentences"
+                android:maxLines="5"
+                android:minLines="3"
+                android:textColor="#04DDFA"
+                android:textColorHint="#4DB6AC" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Buttons Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:weightSum="10">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/sendButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="4"
+                android:backgroundTint="#360F7A"
+                android:text="@string/chat"
+                android:textColor="#06D8F2" />
+
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/rootToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginHorizontal="8dp"
+                android:text="@string/special"
+                android:textColor="#03A9F4" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/exportButton"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="4"
+                android:backgroundTint="#1A5276"
+                android:text="@string/export_chat"
+                android:textColor="#04DDFA" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

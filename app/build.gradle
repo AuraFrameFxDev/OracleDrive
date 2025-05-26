@@ -1,0 +1,103 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-parcelize'
+    id 'kotlin-kapt'
+}
+
+android {
+    // Enable build features
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+    namespace 'com.genesis.ai.app'
+    compileSdk 35  // Updated to latest stable
+
+    defaultConfig {
+        applicationId "com.genesis.ai.app"
+        minSdk 33
+        targetSdk 34  // Updated to match compileSdk
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables.useSupportLibrary = true
+    }
+
+
+    buildTypes {
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+            debuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+        freeCompilerArgs += [
+            '-Xjvm-default=all-compatibility',
+            '-opt-in=kotlin.RequiresOptIn'
+        ]
+    }
+
+    buildFeatures {
+        viewBinding true
+        buildConfig true
+    }
+
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
+    androidResources {
+        additionalParameters '--no-version-vectors'
+    }
+}
+configurations.all {
+    resolutionStrategy {
+        force 'androidx.customview:customview:1.2.0'
+        force 'androidx.customview:customview-poolingcontainer:1.0.0'
+        force 'androidx.fragment:fragment-ktx:1.6.2'
+    }
+}
+
+dependencies {
+    // Kotlin
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.21'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.1.21'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+
+    // AndroidX Core
+    implementation 'androidx.core:core-ktx:1.13.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0-alpha13'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+
+    // Lifecycle
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.7.0'
+
+    // Retrofit & Network
+    implementation 'com.squareup.retrofit2:retrofit:2.12.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.11.0'
+    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.14'
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.12'
+
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
+}
