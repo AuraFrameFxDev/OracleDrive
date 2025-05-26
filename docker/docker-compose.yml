@@ -1,34 +1,40 @@
 version: '3.8'
 
 services:
-  app:
+  backend:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: genesis-backend
+    restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
-      # Add other environment variables here
+      - ENVIRONMENT=development
     volumes:
-      - .:/app
-    # Uncomment the following lines if you need to use the host network
-    # network_mode: "host"
-    # Uncomment the following if you need to specify a custom command
-    # command: python server/app.py
+      - ../:/app
+    working_dir: /app
+    command: uvicorn server.app:app --host 0.0.0.0 --port 8000 --reload
 
-  # Uncomment and modify the following if you need a database
+  # Uncomment to add PostgreSQL database
   # db:
-  #   image: postgres:13
+  #   image: postgres:15
+  #   container_name: genesis-db
+  #   restart: unless-stopped
   #   environment:
-  #     - POSTGRES_USER=user
-  #     - POSTGRES_PASSWORD=password
-  #     - POSTGRES_DB=gencomm
+  #     - POSTGRES_USER=genesis
+  #     - POSTGRES_PASSWORD=your_secure_password
+  #     - POSTGRES_DB=genesis_db
   #   ports:
   #     - "5432:5432"
   #   volumes:
   #     - postgres_data:/var/lib/postgresql/data/
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U genesis"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
 
-# Uncomment if you add a database service
 # volumes:
 #   postgres_data:

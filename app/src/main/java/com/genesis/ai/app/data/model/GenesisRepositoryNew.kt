@@ -22,7 +22,6 @@ object GenesisRepositoryNew {
 
     // Base URL for the API - can be changed in app settings
     private var baseUrl = "https://your-api-base-url.com/"
-        private set
 
     // Mock responses
     private val mockResponses = listOf(
