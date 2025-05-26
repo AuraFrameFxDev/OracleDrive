@@ -33,7 +33,8 @@
         <!-- Material Components -->
         <item name="materialButtonStyle">@style/Widget.GenesisAndroidApp.Button</item>
         <item name="editTextStyle">@style/Widget.GenesisAndroidApp.EditText</item>
-        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox</item>
+        <item name="textInputStyle">@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox
+        </item>
     </style>
 
     <!-- Button Style -->

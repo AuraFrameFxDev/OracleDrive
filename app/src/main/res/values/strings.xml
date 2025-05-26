@@ -1,7 +1,7 @@
 <resources>
     <!-- App Name -->
     <string name="app_name">GenesisAndroidApp</string>
-    
+
     <!-- Main Activity -->
     <string name="genesis_status_online">Genesis Status - Online</string>
     <string name="type_your_message">Type your message</string>
@@ -9,7 +9,10 @@
     <string name="special">Root</string>
     <string name="export_chat">Export Chat</string>
     <string name="open_file_manager">Open File Manager</string>
-    
+    <string name="loading">Loading…</string>
+    <string name="directory_not_found">Directory not found</string>
+    <string name="error_loading_files">Error loading files: %1$s</string>
+
     <!-- File Manager -->
     <string name="file_manager_title">Project Files</string>
     <string name="import_file">Import</string>
@@ -17,15 +20,15 @@
     <string name="select_file">Select</string>
     <string name="cancel">Cancel</string>
     <string name="file_exported">File exported successfully to: %1$s</string>
-    
+
     <!-- Settings -->
     <string name="settings">Settings</string>
     <string name="enter_api_key">Enter API Key</string>
     <string name="save_api_key">Save API Key</string>
-    
+
     <!-- Permissions -->
     <string name="storage_permission_denied">Storage permission required to export chat</string>
-    
+
     <!-- Accessibility -->
     <string name="chat_button_desc">Send message</string>
     <string name="special_mode_switch">Toggle root mode</string>

@@ -11,23 +11,23 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingBottom="16dp">
 
         <TextView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            app:drawableStartCompat="@android:drawable/ic_menu_manage"
             android:drawablePadding="8dp"
-            app:drawableTint="#04DDFA"
             android:gravity="center_vertical"
             android:text="@string/file_manager_title"
             android:textColor="#04DDFA"
             android:textSize="20sp"
-            android:textStyle="bold" />
-            
+            android:textStyle="bold"
+            app:drawableStartCompat="@android:drawable/ic_menu_manage"
+            app:drawableTint="#04DDFA" />
+
         <ImageButton
             android:id="@+id/btnSettings"
             android:layout_width="48dp"
@@ -53,12 +53,12 @@
             android:layout_marginEnd="4dp"
             android:layout_weight="1"
             android:backgroundTint="#1A5276"
-            app:drawableStartCompat="@android:drawable/ic_menu_upload"
             android:drawablePadding="4dp"
-            app:drawableTint="#04DDFA"
             android:padding="8dp"
             android:text="@string/import_file"
-            android:textColor="#04DDFA" />
+            android:textColor="#04DDFA"
+            app:drawableStartCompat="@android:drawable/ic_menu_upload"
+            app:drawableTint="#04DDFA" />
 
         <Button
             android:id="@+id/btnExportFile"
@@ -68,12 +68,12 @@
             android:layout_marginStart="4dp"
             android:layout_weight="1"
             android:backgroundTint="#1A5276"
-            app:drawableStartCompat="@android:drawable/ic_menu_save"
             android:drawablePadding="4dp"
-            app:drawableTint="#04DDFA"
             android:padding="8dp"
             android:text="@string/export"
-            android:textColor="#04DDFA" />
+            android:textColor="#04DDFA"
+            app:drawableStartCompat="@android:drawable/ic_menu_save"
+            app:drawableTint="#04DDFA" />
     </LinearLayout>
 
     <TextView

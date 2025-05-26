@@ -13,6 +13,8 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -26,6 +28,8 @@ import java.util.Date
 import java.util.Locale
 
 class FileManagerActivity : AppCompatActivity() {
+    private val fileLoadScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var currentLoadJob: Job? = null
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var btnSelect: Button
@@ -117,15 +121,43 @@ class FileManagerActivity : AppCompatActivity() {
     }
 
     private fun loadFiles(directory: File) {
-        if (!directory.exists() || !directory.isDirectory) {
-            Toast.makeText(this, R.string.storage_permission_denied, Toast.LENGTH_SHORT).show()
-            return
+        currentLoadJob?.cancel() // Cancel any ongoing load operation
+
+        // Show loading indicator
+        currentPathText.text = getString(R.string.loading)
+
+        currentLoadJob = fileLoadScope.launch {
+            try {
+                if (directory.exists() && directory.isDirectory) {
+                    currentDirectory = directory
+
+                    // List files on IO thread
+                    val files = withContext(Dispatchers.IO) {
+                        directory.listFiles()?.toList() ?: emptyList()
+                    }
+
+                    // Update UI on main thread
+                    withContext(Dispatchers.Main) {
+                        currentPathText.text = directory.absolutePath
+                        (recyclerView.adapter as? FileAdapter)?.updateFiles(files)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@FileManagerActivity,
+                            getString(R.string.directory_not_found),
+                            Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@FileManagerActivity,
+                        getString(R.string.error_loading_files, e.localizedMessage),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
-
-        currentDirectory = directory
-
-        val files = directory.listFiles()?.toList() ?: emptyList()
-        (recyclerView.adapter as? FileAdapter)?.updateFiles(files)
     }
 
     private fun importFileFromUri(uri: Uri) {
@@ -279,6 +311,12 @@ class FileManagerActivity : AppCompatActivity() {
             else -> "*/*"
         }
     }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        currentLoadJob?.cancel()
+        fileLoadScope.cancel()
+    }
 
     companion object {
         private const val REQUEST_MANAGE_STORAGE = 1000
@@ -300,18 +338,47 @@ class FileAdapter(
         val checkBox: View = view.findViewById(R.id.cbSelect)
     }
 
+    private val fileComparator = compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase() }
+    
     fun updateFiles(newFiles: List<File>) {
-        files = newFiles.sortedWith(
-            compareBy(
-                { !it.isDirectory },
-                { it.name.lowercase() }
-            ))
-        notifyDataSetChanged()
+        val oldList = files
+        files = newFiles.sortedWith(fileComparator)
+        
+        // Use DiffUtil for efficient updates
+        val diffResult = androidx.recyclerview.widget.DiffUtil.calculateDiff(object : androidx.recyclerview.widget.DiffUtil.Callback() {
+            override fun getOldListSize() = oldList.size
+            override fun getNewListSize() = files.size
+            
+            override fun areItemsTheSame(oldPos: Int, newPos: Int): Boolean {
+                return oldList[oldPos].absolutePath == files[newPos].absolutePath
+            }
+            
+            override fun areContentsTheSame(oldPos: Int, newPos: Int): Boolean {
+                val oldFile = oldList[oldPos]
+                val newFile = files[newPos]
+                return oldFile.lastModified() == newFile.lastModified() && 
+                       oldFile.length() == newFile.length() &&
+                       oldFile.name == newFile.name
+            }
+        })
+        
+        diffResult.dispatchUpdatesTo(this)
     }
-
+    
     fun setSelectedFile(file: File) {
+        val previousSelected = selectedFile
         selectedFile = file
-        notifyDataSetChanged()
+        
+        // Only update the changed items
+        previousSelected?.let { oldFile ->
+            val oldPos = files.indexOfFirst { it.absolutePath == oldFile.absolutePath }
+            if (oldPos != -1) notifyItemChanged(oldPos)
+        }
+        
+        file?.let { newFile ->
+            val newPos = files.indexOfFirst { it.absolutePath == newFile.absolutePath }
+            if (newPos != -1) notifyItemChanged(newPos)
+        }
     }
 
     override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): FileViewHolder {
@@ -320,7 +387,10 @@ class FileAdapter(
         return FileViewHolder(view)
     }
 
+    private var lastClickTime: Long = 0
+    
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
+        holder.setIsRecyclable(false) // Disable recycling for better stability with file operations
         val file = files[position]
         val isSelected = file == selectedFile
 
@@ -361,9 +431,13 @@ class FileAdapter(
         // Show/hide checkbox based on selection
         holder.checkBox.visibility = if (isSelected) View.VISIBLE else View.GONE
 
-        // Set click listener
+        // Set click listener with debounce
         holder.itemView.setOnClickListener {
-            onFileClick(file)
+            val now = System.currentTimeMillis()
+            if (now - lastClickTime > 500) { // 500ms debounce
+                lastClickTime = now
+                onFileClick(file)
+            }
         }
     }
 

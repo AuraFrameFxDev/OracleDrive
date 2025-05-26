@@ -5,6 +5,7 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
+import okio.Timeout
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -14,7 +15,6 @@ import retrofit2.http.Body
 import retrofit2.http.Multipart
 import retrofit2.http.Part
 import java.util.concurrent.TimeUnit
-import okio.Timeout
 
 object GenesisRepositoryNew {
     // Set this to true to use mock responses
@@ -56,11 +56,11 @@ object GenesisRepositoryNew {
         get() = if (USE_MOCK_RESPONSES) {
             object : ApiService {
                 override fun sendMessage(@Body message: MessageRequest): Call<MessageResponse> =
-                    createMockCall { 
+                    createMockCall {
                         MessageResponse(
                             message = mockResponses.random(),
                             status = "success"
-                        ) 
+                        )
                     }
 
                 @Multipart
@@ -71,11 +71,11 @@ object GenesisRepositoryNew {
                     createMockCall { RootToggleResponse("success") }
 
                 override fun getAiQuestions(): Call<AskResponse> =
-                    createMockCall { 
+                    createMockCall {
                         AskResponse(
                             questions = listOf("Question 1", "Question 2", "Question 3"),
                             status = "success"
-                        ) 
+                        )
                     }
 
                 private inline fun <T> createMockCall(crossinline response: () -> T): Call<T> {
@@ -84,11 +84,13 @@ object GenesisRepositoryNew {
                         override fun enqueue(callback: Callback<T>) {
                             callback.onResponse(this, Response.success(response()))
                         }
+
                         override fun isExecuted(): Boolean = false
                         override fun cancel() {}
                         override fun isCanceled(): Boolean = false
                         override fun request(): Request =
                             Request.Builder().url("https://mock.url").build()
+
                         override fun clone(): Call<T> = this
                         override fun timeout() = object : Timeout() {
                             override fun timeout(timeout: Long, unit: TimeUnit): Timeout = this

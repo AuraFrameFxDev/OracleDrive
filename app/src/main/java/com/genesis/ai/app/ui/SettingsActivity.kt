@@ -16,16 +16,16 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
-        
+
         preferenceHelper = PreferenceHelper(this)
         apiKeyInput = findViewById(R.id.apiKeyInput)
         saveButton = findViewById(R.id.saveButton)
-        
+
         // Load saved API key if exists
         preferenceHelper.getApiKey()?.let {
             apiKeyInput.setText(it)
         }
-        
+
         saveButton.setOnClickListener {
             val apiKey = apiKeyInput.text.toString().trim()
             if (apiKey.isNotEmpty()) {

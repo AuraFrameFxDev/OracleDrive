@@ -8,10 +8,10 @@
     android:theme="@style/Theme.GenesisAndroidApp">
 
     <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         app:boxBackgroundColor="#0A3D62"
         app:boxStrokeColor="#1E88E5"
         app:hintTextColor="#05E1FB">

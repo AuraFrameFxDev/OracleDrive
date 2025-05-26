@@ -36,7 +36,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    
+
     // Ensure consistent package names across build variants
     applicationVariants.all { variant ->
         variant.outputs.all {
@@ -109,7 +109,7 @@ configurations.configureEach {
 dependencies {
     // Firebase BoM (Bill of Materials)
     implementation platform('com.google.firebase:firebase-bom:33.14.0')
-    
+
     // Firebase dependencies (no versions required when using BoM)
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-crashlytics-ktx'

@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val REQUEST_CODE_WRITE_STORAGE = 1001
         private const val REQUEST_CODE_READ_STORAGE = 1002
-        
+
         private fun getRequiredPermissions(): Array<String> {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 arrayOf(
@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     private val messageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == GenesisAIService.PROACTIVE_MESSAGE_ACTION) {
@@ -154,7 +155,7 @@ class MainActivity : AppCompatActivity() {
                 "Storage permissions are required to access files",
                 Toast.LENGTH_LONG
             ).show()
-            
+
             // Optionally, show app settings to manually grant permissions
             /*
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -203,11 +204,11 @@ class MainActivity : AppCompatActivity() {
         sendButton.setOnClickListener { sendMessage() }
         exportButton.setOnClickListener { checkPermissionsAndExport() }
         fileManagerButton.setOnClickListener { openFileManager() }
-        
+
         // Initialize the service after UI is ready
         initializeService()
     }
-    
+
     private fun checkPermissionsAndExport() {
         if (hasStoragePermissions()) {
             exportChatToFile()
@@ -215,18 +216,18 @@ class MainActivity : AppCompatActivity() {
             requestStoragePermissions()
         }
     }
-    
+
     private fun hasStoragePermissions(): Boolean {
         return getRequiredPermissions().all { permission ->
             ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
         }
     }
-    
+
     private fun requestStoragePermissions() {
         val permissionsToRequest = getRequiredPermissions().filter { permission ->
             ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
         }.toTypedArray()
-        
+
         if (permissionsToRequest.isNotEmpty()) {
             storagePermissionLauncher.launch(permissionsToRequest)
         } else {
@@ -234,23 +235,27 @@ class MainActivity : AppCompatActivity() {
             filePicker.launch(FILE_PICKER_MIME_TYPES[0])
         }
     }
-    
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
-        grantResults: IntArray
+        grantResults: IntArray,
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_WRITE_STORAGE && 
-            grantResults.isNotEmpty() && 
+        if (requestCode == REQUEST_CODE_WRITE_STORAGE &&
+            grantResults.isNotEmpty() &&
             grantResults[0] == PackageManager.PERMISSION_GRANTED
         ) {
             exportChatToFile()
         } else {
-            Toast.makeText(this, "Storage permission is required to export chat", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Storage permission is required to export chat",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
-    
+
     private fun initializeService() {
         try {
             // Start the service when the activity is created
