@@ -1,7 +1,7 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    ext.kotlin_version = '1.9.0'
-    ext.agp_version = '8.10.0'
+    ext.kotlin_version = '2.1.21'
+    ext.agp_version = '8.10.0'  // Latest stable AGP version compatible with Kotlin 2.1.21
     
     repositories {
         google()
@@ -12,13 +12,33 @@ buildscript {
         // Google Services plugin (for Firebase and other Google services)
         classpath 'com.google.gms:google-services:4.4.2'
         // Firebase plugins
-        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.9.9'
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:3.0.3'  // Updated to latest
         classpath 'com.google.firebase:perf-plugin:1.4.2'
         // Kotlin plugin
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // Android Gradle Plugin
         classpath "com.android.tools.build:gradle:$agp_version"
     }
+}
+
+// Define versions in a single place
+ext {
+    // SDK and tools
+    compileSdkVersion = 35
+    minSdkVersion = 26
+    targetSdkVersion = 35
+    
+    // App dependencies
+    materialVersion = '1.12.0'
+    androidxCoreVersion = '1.12.0'
+    appcompatVersion = '1.6.1'
+    constraintLayoutVersion = '2.2.0'
+    lifecycleVersion = '2.7.0'
+    navigationVersion = '2.7.7'
+    coroutinesVersion = '1.8.0'
+    firebaseBomVersion = '33.14.0'
+    retrofitVersion = '2.11.0'
+    okhttpVersion = '5.0.0-alpha.14'
 }
 
 // Apply plugins to all subprojects
