@@ -7,18 +7,35 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:drawableStart="@android:drawable/ic_menu_manage"
-        android:drawablePadding="8dp"
-        android:drawableTint="#04DDFA"
+        android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingBottom="16dp"
-        android:text="Project Files"
-        android:textColor="#04DDFA"
-        android:textSize="20sp"
-        android:textStyle="bold" />
+        android:paddingBottom="16dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableStart="@android:drawable/ic_menu_manage"
+            android:drawablePadding="8dp"
+            android:drawableTint="#04DDFA"
+            android:gravity="center_vertical"
+            android:text="Project Files"
+            android:textColor="#04DDFA"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+            
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Settings"
+            android:src="@drawable/ic_settings"
+            android:tint="#04DDFA" />
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -55,6 +55,11 @@
             android:exported="false"
             android:theme="@style/Theme.GenesisAndroidApp" />
 
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GenesisAndroidApp" />
+
         <service
             android:name=".service.GenesisAIService"
             android:enabled="true"

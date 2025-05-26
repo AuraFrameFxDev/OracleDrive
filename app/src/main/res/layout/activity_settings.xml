@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#032831">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        app:boxBackgroundColor="#0A3D62"
+        app:boxStrokeColor="#1E88E5"
+        app:hintTextColor="#05E1FB">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/apiKeyInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter API Key"
+            android:inputType="textPassword"
+            android:textColor="#04DDFA"
+            android:textColorHint="#4DB6AC" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/saveButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#1E88E5"
+        android:text="Save API Key"
+        android:textColor="#FFFFFF" />
+
+</LinearLayout>

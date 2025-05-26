@@ -10,6 +10,7 @@ import android.os.Environment
 import android.provider.Settings
 import android.view.View
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +31,7 @@ class FileManagerActivity : AppCompatActivity() {
     private lateinit var btnSelect: Button
     private lateinit var btnExport: Button
     private lateinit var btnCancel: Button
+    private lateinit var btnSettings: ImageButton
     private lateinit var currentPathText: TextView
     private lateinit var currentDirectory: File
     private var selectedFile: File? = null
@@ -63,6 +65,7 @@ class FileManagerActivity : AppCompatActivity() {
         btnSelect = findViewById(R.id.btnSelect)
         btnExport = findViewById(R.id.btnExportFile)
         btnCancel = findViewById(R.id.btnCancel)
+        btnSettings = findViewById(R.id.btnSettings)
         currentPathText = findViewById(R.id.tvCurrentPath)
 
         // Set click listeners
@@ -82,6 +85,10 @@ class FileManagerActivity : AppCompatActivity() {
 
         btnCancel.setOnClickListener {
             finish()
+        }
+
+        btnSettings.setOnClickListener {
+            startActivity(Intent(this, com.genesis.ai.app.ui.SettingsActivity::class.java))
         }
 
         // Initialize UI

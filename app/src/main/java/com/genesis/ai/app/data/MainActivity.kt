@@ -15,12 +15,10 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.genesis.ai.app.R
 import com.genesis.ai.app.data.model.GenesisRepositoryNew
@@ -40,11 +38,29 @@ import java.util.Date
 import java.util.Locale
 
 private const val MIME_TYPE = "application/octet-stream"
-private const val FILE_PICKER_MIME_TYPE = "*/*"
+private val FILE_PICKER_MIME_TYPES = arrayOf("*/*")  // Changed to array of strings
 
 class MainActivity : AppCompatActivity() {
     companion object {
         private const val REQUEST_CODE_WRITE_STORAGE = 1001
+        private const val REQUEST_CODE_READ_STORAGE = 1002
+        
+        private fun getRequiredPermissions(): Array<String> {
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                arrayOf(
+                    Manifest.permission.READ_MEDIA_IMAGES,
+                    Manifest.permission.READ_MEDIA_VIDEO,
+                    Manifest.permission.READ_MEDIA_AUDIO
+                )
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                arrayOf(Manifest.permission.MANAGE_EXTERNAL_STORAGE)
+            } else {
+                arrayOf(
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                )
+            }
+        }
     }
     private val messageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -125,13 +141,27 @@ class MainActivity : AppCompatActivity() {
 
     // For runtime permission requests
     private val storagePermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            filePicker.launch(FILE_PICKER_MIME_TYPE)
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.entries.all { it.value }
+        if (allGranted) {
+            // All permissions granted, proceed with file operation
+            filePicker.launch(FILE_PICKER_MIME_TYPES[0])
         } else {
-            Toast.makeText(this, "Storage permission required to import file", Toast.LENGTH_SHORT)
-                .show()
+            // Explain why the permission is needed
+            Toast.makeText(
+                this,
+                "Storage permissions are required to access files",
+                Toast.LENGTH_LONG
+            ).show()
+            
+            // Optionally, show app settings to manually grant permissions
+            /*
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            val uri = Uri.fromParts("package", packageName, null)
+            intent.data = uri
+            startActivity(intent)
+            */
         }
     }
 
@@ -179,19 +209,29 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun checkPermissionsAndExport() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU || 
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (hasStoragePermissions()) {
             exportChatToFile()
         } else {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                REQUEST_CODE_WRITE_STORAGE
-            )
+            requestStoragePermissions()
+        }
+    }
+    
+    private fun hasStoragePermissions(): Boolean {
+        return getRequiredPermissions().all { permission ->
+            ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+    
+    private fun requestStoragePermissions() {
+        val permissionsToRequest = getRequiredPermissions().filter { permission ->
+            ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
+        }.toTypedArray()
+        
+        if (permissionsToRequest.isNotEmpty()) {
+            storagePermissionLauncher.launch(permissionsToRequest)
+        } else {
+            // All permissions already granted
+            filePicker.launch(FILE_PICKER_MIME_TYPES[0])
         }
     }
     
@@ -223,30 +263,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkStoragePermissionAndPickFile() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            // On Android 12 and below, check READ_EXTERNAL_STORAGE
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                storagePermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-            } else {
-                filePicker.launch(FILE_PICKER_MIME_TYPE)
-            }
-        } else {
-            // On Android 13+, permission is not required for file picker
+        if (hasStoragePermissions()) {
             filePicker.launch(FILE_PICKER_MIME_TYPE)
+        } else {
+            requestStoragePermissions()
         }
     }
 
     private fun openFileManager() {
-        try {
+        if (hasStoragePermissions()) {
             val intent = Intent(this, FileManagerActivity::class.java)
             startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(this, "File manager not available: ${e.message}", Toast.LENGTH_SHORT).show()
-            e.printStackTrace()
+        } else {
+            requestStoragePermissions()
         }
     }
 
