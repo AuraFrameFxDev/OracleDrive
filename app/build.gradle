@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = 'com.genesis.ai.app'
-    compileSdk = 33
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.genesis.ai.app"
-        minSdk = 33 // Lowered from 33 to support more devices
-        targetSdk = 33
+        minSdk = 26 // Lowered from 33 to support more devices
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
