@@ -1,0 +1,22 @@
+version: 2
+updates:
+  # Gradle (Kotlin/Java)
+  - package-ecosystem: "gradle"
+    directory: "/"                  # gradle files (build.gradle, settings.gradle) are at the root
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # Python (pip)
+  - package-ecosystem: "pip"
+    directory: "/"                  # requirements.txt and pyproject.toml are at the root
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+
+  # Docker (container dependencies)
+  - package-ecosystem: "docker"
+    directory: "/docker"            # docker directory exists, adjust if Dockerfile is elsewhere
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
