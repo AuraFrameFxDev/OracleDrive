@@ -18,7 +18,6 @@ alembic = "^1.12.1"
 pydantic = { extras = ["email"], version = "^2.4.2" }
 python-multipart = "^0.0.6"
 httpx = "^0.25.0"
-python-jose = { extras = ["cryptography"], version = "^3.3.0" }
 firebase-admin = "^6.2.0"
 google-cloud-aiplatform = "^1.36.4"
 
