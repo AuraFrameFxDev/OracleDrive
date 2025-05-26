@@ -6,7 +6,7 @@
     <string name="type_message">Type your message...</string>
     <string name="genesis_asks">Genesis asks:</string>
     <string name="genesis_status_online">Genesis Status - Online</string>
-    <string name="type_your_message">Type your message...</string>
+    <string name="type_your_message">Type your message...</string> <!-- Only keep one! -->
     <string name="chat">Send</string>
     <string name="special">Root</string>
 
