@@ -7,7 +7,7 @@ python-dotenv==1.0.0
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.10
 alembic==1.12.1
-pydantic[email]==2.4.2
+pydantic[email]==2.11.5
 python-jose[cryptography]==3.3.0
 firebase-admin==6.2.0
 google-cloud-aiplatform==1.36.4
