@@ -1,10 +1,30 @@
 <resources>
-    <color name="purple_200">#BB86FC</color>
-    <color name="purple_500">#6200EE</color>
-    <color name="purple_700">#3700B3</color>
-    <color name="teal_200">#03DAC5</color>
-    <color name="teal_700">#018786</color>
+    <!-- 80s Retro Terminal Colors -->
+    <color name="terminal_bg">#121212</color>
+    <color name="terminal_fg">#00FF9F</color> <!-- Bright teal -->
+    <color name="terminal_accent">#9D00FF</color> <!-- Bright purple -->
+    <color name="terminal_highlight">#00E5FF</color> <!-- Cyan highlight -->
+    <color name="terminal_error">#FF00FF</color> <!-- Magenta for errors -->
+
+    <!-- Theme colors -->
+    <color name="primary">@color/terminal_fg</color>
+    <color name="primary_dark">#007A67</color>
+    <color name="accent">@color/terminal_accent</color>
+    <color name="background">@color/terminal_bg</color>
+    <color name="surface">#1E1E1E</color>
+    <color name="on_primary">#000000</color>
+    <color name="on_background">@color/terminal_fg</color>
+    <color name="on_surface">#CCCCCC</color>
+    <color name="on_error">#000000</color>
+
+    <!-- Legacy colors (keeping for compatibility) -->
+    <color name="purple_200">#9D00FF</color>
+    <color name="purple_500">#7B1FA2</color>
+    <color name="purple_700">#4A148C</color>
+    <color name="teal_200">#00FF9F</color>
+    <color name="teal_700">#00BFA5</color>
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
-    <color name="ic_launcher_background">#00000000</color>
+    <color name="error">@color/terminal_error</color>
+    <color name="ic_launcher_background">#000000</color>
 </resources>

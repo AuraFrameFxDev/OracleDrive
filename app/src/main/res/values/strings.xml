@@ -3,14 +3,12 @@
     <string name="send">Send</string>
     <string name="import_file">Import</string>
     <string name="root">Root</string>
-    <string name="type_message">Type your message...</string>
+    <string name="type_message">Type your message</string>
     <string name="genesis_asks">Genesis asks:</string>
     <string name="genesis_status_online">Genesis Status - Online</string>
-    <string name="type_your_message">Type your message...</string>
+    <string name="type_your_message">Type your message</string>
     <string name="chat">Send</string>
     <string name="special">Root</string>
-
-    <!-- File Manager Strings -->
     <string name="file_manager_title">Project Files</string>
     <string name="export_chat">Export Chat</string>
     <string name="select_file">Select</string>
@@ -25,4 +23,10 @@
     <string name="storage_permission_denied">Storage permission required to export chat</string>
     <string name="file_manager">Files</string>
     <string name="export">Export</string>
+
+    <!-- Accessibility Strings -->
+    <string name="chat_button_desc">Send message</string>
+    <string name="special_mode_switch">Toggle root mode</string>
+    <string name="export_chat_desc">Export chat history</string>
+    <string name="file_icon">File icon</string>
 </resources>

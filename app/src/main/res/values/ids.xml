@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="importButton" type="id">importbutton</item>
-    <item name="btnFileManager" type="id">btnfilemanager</item>
+    <item name="action_open_playlist" type="id" />
+    <item name="importButton" type="id" />
+    <item name="btnFileManager" type="id" />
 </resources>

@@ -6,33 +6,27 @@ plugins {
 }
 
 android {
-    // Enable build features
-    buildFeatures {
-        viewBinding true
-        buildConfig true
-    }
-    namespace 'com.genesis.ai.app'
-    compileSdk 35  // Updated to latest stable
+    namespace = 'com.genesis.ai.app'
+    compileSdk = 33
 
     defaultConfig {
-        applicationId "com.genesis.ai.app"
-        minSdk 33
-        targetSdk 34  // Updated to match compileSdk
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        applicationId = "com.genesis.ai.app"
+        minSdk = 33
+        targetSdk = 33
+        versionCode = 1
+        versionName = "1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
     }
 
-
     buildTypes {
         release {
-            minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            minifyEnabled = true
+            proguardFiles(getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro')
         }
         debug {
-            minifyEnabled false
-            debuggable true
+            minifyEnabled = false
+            debuggable = true
         }
     }
 
@@ -44,23 +38,23 @@ android {
     kotlinOptions {
         jvmTarget = '17'
         freeCompilerArgs += [
-            '-Xjvm-default=all-compatibility',
-            '-opt-in=kotlin.RequiresOptIn'
+                '-Xjvm-default=all-compatibility',
+                '-opt-in=kotlin.RequiresOptIn'
         ]
     }
 
     buildFeatures {
-        viewBinding true
-        buildConfig true
+        viewBinding = true
+        buildConfig = true
     }
 
     packagingOptions {
         resources {
-            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+            excludes += ['/META-INF/{AL2.0,LGPL2.1}']
         }
     }
     androidResources {
-        additionalParameters '--no-version-vectors'
+        additionalParameters = ['--no-version-vectors']
     }
 }
 configurations.all {
@@ -75,7 +69,7 @@ dependencies {
     // Kotlin
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.21'
     implementation 'org.jetbrains.kotlin:kotlin-reflect:2.1.21'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0'
 
     // AndroidX Core
     implementation 'androidx.core:core-ktx:1.13.0'
@@ -83,6 +77,8 @@ dependencies {
     implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.2.0-alpha13'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
 
     // Lifecycle
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'

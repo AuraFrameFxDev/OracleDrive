@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -237,10 +238,14 @@ class MainActivity : AppCompatActivity() {
                 val file = File(downloadsDir, fileName)
                 file.writeText(content)
 
-                // Notify media scanner
-                val mediaScanIntent = Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
-                mediaScanIntent.data = Uri.fromFile(file)
-                sendBroadcast(mediaScanIntent)
+                // Notify media scanner using MediaScannerConnection
+                MediaScannerConnection.scanFile(
+                    this,
+                    arrayOf(file.absolutePath),
+                    null
+                ) { path, uri ->
+                    // Media scan completed
+                }
 
                 Toast.makeText(
                     this,
