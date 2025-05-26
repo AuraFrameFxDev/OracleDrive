@@ -14,7 +14,7 @@ rootProject.name = 'GenesisAndroidApp'
 include ':app'
 
 // Enable version catalogs
-enableFeaturePreview('VERSION_CATALOGS')
+enableFeaturePreview 'VERSION_CATALOGS'
 
 // Configure dependency resolution
 dependencyResolutionManagement {
