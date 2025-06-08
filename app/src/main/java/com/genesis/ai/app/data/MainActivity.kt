@@ -25,8 +25,12 @@ import com.genesis.ai.app.data.model.GenesisRepositoryNew
 import com.genesis.ai.app.data.model.ImportResponse
 import com.genesis.ai.app.data.model.MessageRequest
 import com.genesis.ai.app.data.model.MessageResponse
+import com.genesis.ai.app.data.model.LSPosedModuleRequest // ADDED IMPORT
+import com.genesis.ai.app.data.model.LSPosedModuleResponse // ADDED IMPORT
 import com.genesis.ai.app.service.GenesisAIService
 import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.android.material.textfield.TextInputEditText // ADDED IMPORT
+import com.google.firebase.auth.FirebaseAuth // ADDED IMPORT
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -80,6 +84,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var exportButton: Button
     private lateinit var fileManagerButton: Button
     private lateinit var aiQuestions: TextView
+
+    // NEW UI Elements for LSPosed Module Control
+    private lateinit var moduleToggleSwitch: SwitchMaterial
+    private lateinit var moduleNameInput: TextInputEditText
+    private lateinit var auth: FirebaseAuth // Firebase Auth instance
 
     // For importing a file using SAF
     private val filePicker =
@@ -192,22 +201,127 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Initialize Firebase Auth
+        auth = FirebaseAuth.getInstance()
+
         // Initialize views
         chatLog = findViewById(R.id.chatLog)
-        messageInput = findViewById(R.id.messageInput)
+        messageInput = findViewById(R.id.messageInput) // This is an EditText
         sendButton = findViewById(R.id.sendButton)
-        rootToggle = findViewById(R.id.rootToggle)
+        rootToggle = findViewById(R.id.rootToggle) // Existing switch
+        // importButton = findViewById(R.id.importButton) // Example, if it exists and needs init
         exportButton = findViewById(R.id.exportButton)
         fileManagerButton = findViewById(R.id.fileManagerButton)
         aiQuestions = findViewById(R.id.aiQuestions)
+
+        // Initialize NEW UI Elements for LSPosed Module Control
+        // Assuming IDs from the XML provided in the issue:
+        moduleToggleSwitch = findViewById(R.id.moduleToggleSwitch)
+        moduleNameInput = findViewById(R.id.moduleNameInput)
 
         // Set up click listeners
         sendButton.setOnClickListener { sendMessage() }
         exportButton.setOnClickListener { checkPermissionsAndExport() }
         fileManagerButton.setOnClickListener { openFileManager() }
+        // importButton.setOnClickListener { checkStoragePermissionAndPickFile() } // If importButton is used
 
-        // Initialize the service after UI is ready
+        // Listener for the new module toggle switch
+        moduleToggleSwitch.setOnCheckedChangeListener { _, isChecked ->
+            val packageName = moduleNameInput.text.toString()
+            toggleLSPosedModule(packageName, isChecked)
+        }
+        // TODO: Add a button or list view to select modules instead of manual input (as per issue comment)
+
         initializeService()
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun toggleLSPosedModule(packageName: String, enable: Boolean) {
+        if (packageName.isBlank()) {
+            showToast("Module package name cannot be empty.")
+            moduleToggleSwitch.isChecked = !enable // Revert toggle state
+            return
+        }
+        if (auth.currentUser == null) {
+            showToast("Please sign in first to manage modules.")
+            moduleToggleSwitch.isChecked = !enable // Revert toggle state
+            return
+        }
+
+        val request = LSPosedModuleRequest(packageName = packageName, enable = enable)
+        showToast("Requesting to toggle module: $packageName to $enable")
+
+        // Get fresh ID token (this should be handled securely, e.g., via a ViewModel/Repository)
+        auth.currentUser?.getIdToken(true)?.addOnSuccessListener { tokenResult ->
+            tokenResult.token?.let { token ->
+                // The issue implies GenesisRepositoryNew.api directly, but typically you'd pass the token
+                // with the request, e.g., via an Authenticator or interceptor in Retrofit setup.
+                // For this implementation, we'll assume GenesisRepositoryNew handles token attachment
+                // or the API doesn't require bearer token for this specific endpoint based on server setup.
+                // If direct token usage is needed: GenesisRepositoryNew.setAuthToken(token) or pass to method.
+                // The server's get_current_user expects an Authorization header.
+                // For now, let's assume the Retrofit client used by GenesisRepositoryNew.api has an interceptor
+                // that adds this token. If not, this part needs adjustment.
+                // The issue's example for toggleLSPosedModule in MainActivity.kt doesn't show explicit token setting
+                // for the repository before the call, but mentions GenesisRepositoryNew.setAuthToken(token)
+                // as a possibility in a comment.
+
+                // Let's try to use the setAuthToken approach if available, otherwise, it assumes interceptor.
+                // Assuming GenesisRepositoryNew has a static method setAuthToken for simplicity here.
+                // This is a common pattern but might differ in the actual project.
+                try {
+                    val method = GenesisRepositoryNew::class.java.getMethod("setAuthToken", String::class.java)
+                    method.invoke(null, token) // Call static method if it exists
+                     showToast("Auth token set for API call.")
+                } catch (e: NoSuchMethodException) {
+                    showToast("setAuthToken method not found in GenesisRepositoryNew. Assuming interceptor handles auth.")
+                } catch (e: Exception) {
+                    showToast("Error setting auth token: ${e.message}")
+                }
+
+
+                GenesisRepositoryNew.api.toggleLSPosedModule(request)
+                    .enqueue(object : Callback<LSPosedModuleResponse> {
+                        override fun onResponse(call: Call<LSPosedModuleResponse>, response: Response<LSPosedModuleResponse>) {
+                            runOnUiThread { // Ensure UI updates are on the main thread
+                                if (response.isSuccessful && response.body() != null) {
+                                    val resp = response.body()!!
+                                    showToast("Module '${resp.packageName}' status: ${resp.status}, Enabled: ${resp.enabled}")
+                                    // Update UI based on actual response if needed
+                                    // If server confirms different state, update moduleToggleSwitch.isChecked = resp.enabled
+                                    if (moduleToggleSwitch.isChecked != resp.enabled) {
+                                        // This might happen if the operation partially succeeded or server corrected the state
+                                        moduleToggleSwitch.isChecked = resp.enabled
+                                    }
+                                } else {
+                                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                                    showToast("Failed to toggle module: ${response.code()} - $errorBody")
+                                    moduleToggleSwitch.isChecked = !enable // Revert on failure
+                                }
+                            }
+                        }
+
+                        override fun onFailure(call: Call<LSPosedModuleResponse>, t: Throwable) {
+                            runOnUiThread { // Ensure UI updates are on the main thread
+                                showToast("Network error toggling module: ${t.message}")
+                                moduleToggleSwitch.isChecked = !enable // Revert on failure
+                            }
+                        }
+                    })
+            } ?: runOnUiThread {
+                showToast("Authentication token not available. Cannot toggle module.")
+                moduleToggleSwitch.isChecked = !enable // Revert toggle state
+            }
+        }?.addOnFailureListener { e ->
+            runOnUiThread {
+                showToast("Failed to get auth token: ${e.message}")
+                moduleToggleSwitch.isChecked = !enable // Revert toggle state
+            }
+        }
+        // Removed Thread { }.start() wrapper as getIdToken is async and enqueue handles its own threading.
     }
 
     private fun checkPermissionsAndExport() {
@@ -355,6 +469,8 @@ class MainActivity : AppCompatActivity() {
         val message = messageInput.text.toString().trim()
         if (message.isEmpty()) return
 
+        updateChatLog("You", message) // Display user message immediately
+
         val request = MessageRequest(message)
         GenesisRepositoryNew.api.sendMessage(request)
             .enqueue(object : Callback<MessageResponse> {
@@ -365,35 +481,26 @@ class MainActivity : AppCompatActivity() {
                     if (response.isSuccessful) {
                         val responseBody = response.body()
                         if (responseBody != null) {
-                            updateChatLog(
-                                message,
-                                responseBody.message
-                            )
+                            updateChatLog("AI", responseBody.message) // Pass "AI" as sender
                         } else {
-                            updateChatLog(message, "Error: Empty response from server")
+                            updateChatLog("Error", "Empty response from server")
                         }
                     } else {
-                        Toast.makeText(
-                            this@MainActivity,
-                            "Failed to send message",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                         val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                        updateChatLog("Error", "Failed to send message: ${response.code()} - $errorBody")
                     }
                 }
 
                 override fun onFailure(call: Call<MessageResponse>, t: Throwable) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Error: ${t.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    updateChatLog("Error","Network Error: ${t.message}")
                 }
             })
+        messageInput.text.clear() // Clear input after sending
     }
 
-    private fun updateChatLog(userMessage: String, aiResponse: String) {
-        chatLog.append("You: $userMessage\n")
-        chatLog.append("AI: $aiResponse\n\n")
-        messageInput.text.clear()
+    // Modified to accept sender parameter
+    private fun updateChatLog(sender: String, message: String) {
+        chatLog.append("$sender: $message\n\n")
+        // Scroll to bottom logic if chatLog is inside a ScrollView might be needed here
     }
 }

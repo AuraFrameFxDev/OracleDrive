@@ -6,6 +6,8 @@ import com.genesis.ai.app.data.model.MessageRequest
 import com.genesis.ai.app.data.model.MessageResponse
 import com.genesis.ai.app.data.model.RootToggleRequest
 import com.genesis.ai.app.data.model.RootToggleResponse
+import com.genesis.ai.app.data.model.LSPosedModuleRequest // ADDED IMPORT
+import com.genesis.ai.app.data.model.LSPosedModuleResponse // ADDED IMPORT
 import okhttp3.MultipartBody
 import retrofit2.Call
 import retrofit2.http.Body
@@ -27,4 +29,7 @@ interface ApiService {
 
     @GET("getAiQuestions")
     fun getAiQuestions(): Call<AskResponse>
+
+    @POST("toggleLSPosedModule") // NEW ENDPOINT
+    fun toggleLSPosedModule(@Body request: LSPosedModuleRequest): Call<LSPosedModuleResponse>
 }
