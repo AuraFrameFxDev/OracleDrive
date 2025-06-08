@@ -5,6 +5,7 @@
 
     <!-- Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="com.example.app.permission.ACCESS_ORACLEDRIVE_SERVICE" /> <!-- ADDED -->
 
     <!-- Storage Permissions -->
     <uses-permission
@@ -34,14 +35,23 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
+    <permission
+        android:name="com.example.app.permission.ACCESS_ORACLEDRIVE_SERVICE"
+        android:protectionLevel="signature" /> <!-- ADDED -->
+
     <application
         android:name=".GenesisApplication"
+        android:allowBackup="true" <!-- ADDED -->
+        android:dataExtractionRules="@xml/data_extraction_rules" <!-- ADDED -->
+        android:fullBackupContent="@xml/full_backup_content" <!-- ADDED -->
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@mipmap/ic_launcher_round" <!-- ADDED -->
+        android:requestLegacyExternalStorage="true" <!-- KEPT EXISTING -->
         android:supportsRtl="true"
-        android:theme="@style/Theme.GenesisAndroidApp"
-        tools:targetApi="29">
+        android:theme="@style/Theme.GenesisAndroidApp" <!-- KEPT EXISTING THEME -->
+        android:usesCleartextTraffic="true" <!-- ADDED -->
+        tools:targetApi="29"> <!-- KEPT EXISTING targetApi -->
 
         <activity
             android:name=".data.MainActivity"
@@ -77,6 +87,16 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".ipc.AuraDriveServiceImpl" <!-- ADDED SERVICE -->
+            android:enabled="true"
+            android:exported="true"
+            android:permission="com.example.app.permission.ACCESS_ORACLEDRIVE_SERVICE">
+            <intent-filter>
+                <action android:name="com.example.app.ipc.IAuraDriveService" />
+            </intent-filter>
+        </service>
 
         <!-- Photo Picker for Android 14+ -->
         <provider

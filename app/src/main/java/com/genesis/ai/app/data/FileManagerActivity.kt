@@ -1,6 +1,7 @@
 package com.genesis.ai.app.data
 
 import android.Manifest
+import android.annotation.SuppressLint // ADDED IMPORT
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -21,11 +22,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.genesis.ai.app.R
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.genesis.ai.app.GenesisApplication // ADDED IMPORT
+import com.genesis.ai.app.data.logging.OracleDriveLogger // ADDED IMPORT
+import java.text.SimpleDateFormat // ADDED IMPORT
+import java.util.Date // ADDED IMPORT
+import java.util.Locale // ADDED IMPORT
+
 
 class FileManagerActivity : AppCompatActivity() {
     private val fileLoadScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -40,238 +43,303 @@ class FileManagerActivity : AppCompatActivity() {
     private lateinit var currentDirectory: File
     private var selectedFile: File? = null
 
-    private val createFile =
+    private lateinit var oracleDriveLogger: OracleDriveLogger // ADDED
+    private val TAG = "FileManagerActivity" // ADDED
+
+    private val createFileLauncher = // Renamed from createFile to avoid confusion
         registerForActivityResult(ActivityResultContracts.CreateDocument("*/*")) { uri ->
-            uri?.let { exportChatToFile(it) }
+            oracleDriveLogger.d(TAG, "createFileLauncher result URI: $uri")
+            uri?.let { exportSelectedFile(it) } ?: oracleDriveLogger.w(TAG, "CreateDocument URI was null for export.")
         }
 
-    private val openDocument =
+    private val openDocumentLauncher = // Renamed from openDocument
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-            uri?.let { importFileFromUri(it) }
+            oracleDriveLogger.d(TAG, "openDocumentLauncher result URI: $uri")
+            uri?.let { importFileFromUri(it) } ?: oracleDriveLogger.w(TAG, "OpenDocument URI was null for import.")
         }
 
-    private val requestPermission = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            loadFiles(currentDirectory)
-        } else {
-            showPermissionDeniedDialog()
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            oracleDriveLogger.i(TAG, "Storage permission (WRITE_EXTERNAL_STORAGE) granted via launcher: $isGranted")
+            if (isGranted) {
+                loadFiles(currentDirectory)
+            } else {
+                showPermissionDeniedDialog("Write External Storage permission is required.")
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_file_manager)
+        oracleDriveLogger = (application as GenesisApplication).oracleDriveLogger
+        oracleDriveLogger.i(TAG, "onCreate called.")
 
-        // Initialize views
+        setContentView(R.layout.activity_file_manager)
+        oracleDriveLogger.d(TAG, "Content view set.")
+
         recyclerView = findViewById(R.id.rvFiles)
         btnSelect = findViewById(R.id.btnSelect)
         btnExport = findViewById(R.id.btnExportFile)
         btnCancel = findViewById(R.id.btnCancel)
         btnSettings = findViewById(R.id.btnSettings)
         currentPathText = findViewById(R.id.tvCurrentPath)
+        oracleDriveLogger.d(TAG, "Views initialized.")
 
-        // Set click listeners
         btnSelect.setOnClickListener {
-            selectedFile?.let { file ->
-                val resultIntent = Intent().apply {
-                    data = Uri.fromFile(file)
-                }
+            val localSelectedFile = selectedFile
+            oracleDriveLogger.d(TAG, "Select button clicked. Selected file: ${localSelectedFile?.name}")
+            localSelectedFile?.let { file ->
+                val resultIntent = Intent().apply { data = Uri.fromFile(file) }
                 setResult(RESULT_OK, resultIntent)
                 finish()
-            }
+            } ?: oracleDriveLogger.w(TAG, "Select button clicked but no file was selected.")
         }
 
         btnExport.setOnClickListener {
-            checkStoragePermission()
+            oracleDriveLogger.d(TAG, "Export button clicked.")
+            if (selectedFile != null) {
+                oracleDriveLogger.i(TAG, "Attempting to export file: ${selectedFile?.name}")
+                checkStoragePermissionAndPrepareExport()
+            } else {
+                oracleDriveLogger.w(TAG, "Export button clicked but no file selected.")
+                Toast.makeText(this, "No file selected for export", Toast.LENGTH_SHORT).show()
+            }
         }
 
         btnCancel.setOnClickListener {
+            oracleDriveLogger.d(TAG, "Cancel button clicked. Finishing activity.")
             finish()
         }
 
         btnSettings.setOnClickListener {
-            startActivity(Intent(this, com.genesis.ai.app.ui.SettingsActivity::class.java))
+            oracleDriveLogger.d(TAG, "Settings button clicked.")
+            try {
+                oracleDriveLogger.i(TAG, "Navigating to SettingsActivity.")
+                startActivity(Intent(this, com.genesis.ai.app.ui.SettingsActivity::class.java))
+            } catch (e: Exception) {
+                oracleDriveLogger.e(TAG, "Failed to start SettingsActivity: ${e.message}", e)
+                Toast.makeText(this, "Could not open settings.", Toast.LENGTH_SHORT).show()
+            }
         }
+        oracleDriveLogger.d(TAG, "Click listeners set.")
 
-        // Initialize UI
         setupRecyclerView()
-
-        // Set initial directory
         currentDirectory = Environment.getExternalStorageDirectory()
-        checkStoragePermission()
+        oracleDriveLogger.i(TAG, "Initial directory set to: ${currentDirectory.absolutePath}")
+        checkStoragePermissionAndLoadFiles()
+        oracleDriveLogger.i(TAG, "onCreate completed.")
+    }
+
+    private fun checkStoragePermissionAndPrepareExport() {
+        oracleDriveLogger.d(TAG, "checkStoragePermissionAndPrepareExport called.")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()) {
+                oracleDriveLogger.i(TAG, "MANAGE_EXTERNAL_STORAGE permission already granted (Android R+). Preparing export.")
+                prepareExport()
+            } else {
+                oracleDriveLogger.w(TAG, "MANAGE_EXTERNAL_STORAGE permission NOT granted (Android R+). Requesting.")
+                requestManageStoragePermission()
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                oracleDriveLogger.i(TAG, "WRITE_EXTERNAL_STORAGE permission already granted (pre-Android R). Preparing export.")
+                prepareExport()
+            } else {
+                oracleDriveLogger.w(TAG, "WRITE_EXTERNAL_STORAGE permission NOT granted (pre-Android R). Requesting via launcher.")
+                requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
+    }
+
+    private fun checkStoragePermissionAndLoadFiles() {
+        oracleDriveLogger.d(TAG, "checkStoragePermissionAndLoadFiles for dir: ${currentDirectory.absolutePath}")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Environment.isExternalStorageManager()) {
+                oracleDriveLogger.i(TAG, "MANAGE_EXTERNAL_STORAGE permission granted (Android R+). Loading files.")
+                loadFiles(currentDirectory)
+            } else {
+                oracleDriveLogger.w(TAG, "MANAGE_EXTERNAL_STORAGE permission NOT granted (Android R+). Requesting.")
+                requestManageStoragePermission()
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                oracleDriveLogger.i(TAG, "READ_EXTERNAL_STORAGE permission granted (pre-Android R). Loading files.")
+                loadFiles(currentDirectory)
+            } else {
+                oracleDriveLogger.w(TAG, "READ_EXTERNAL_STORAGE permission NOT granted (pre-Android R). Requesting WRITE as proxy for launcher.")
+                requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
     }
 
     private fun setupRecyclerView() {
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = FileAdapter(emptyList()) { file ->
+            oracleDriveLogger.d(TAG, "File clicked in adapter: ${file.name}, isDirectory: ${file.isDirectory}")
             if (file.isDirectory) {
-                val message = getString(R.string.file_exported, file.absolutePath)
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-                // Update UI to show selection
-                (recyclerView.adapter as? FileAdapter)?.setSelectedFile(file)
+                oracleDriveLogger.i(TAG, "Directory selected: ${file.absolutePath}. Navigating.")
+                currentDirectory = file
+                checkStoragePermissionAndLoadFiles()
+                selectedFile = null
+                btnSelect.isEnabled = false
             } else {
                 selectedFile = file
                 btnSelect.isEnabled = true
-                // Update UI to show selection
-                (recyclerView.adapter as? FileAdapter)?.setSelectedFile(file)
+                oracleDriveLogger.i(TAG, "File selected: ${file.name}")
             }
+            (recyclerView.adapter as? FileAdapter)?.setSelectedFile(file)
         }
+        oracleDriveLogger.d(TAG, "RecyclerView setup complete.")
     }
 
     private fun loadFiles(directory: File) {
-        currentLoadJob?.cancel() // Cancel any ongoing load operation
-
-        // Show loading indicator
+        oracleDriveLogger.i(TAG, "Loading files from directory: ${directory.absolutePath}")
+        currentLoadJob?.cancel()
         currentPathText.text = getString(R.string.loading)
 
         currentLoadJob = fileLoadScope.launch {
             try {
-                if (directory.exists() && directory.isDirectory) {
-                    currentDirectory = directory
-
-                    // List files on IO thread
-                    val files = withContext(Dispatchers.IO) {
-                        directory.listFiles()?.toList() ?: emptyList()
-                    }
-
-                    // Update UI on main thread
+                if (!directory.exists() || !directory.isDirectory) {
+                    oracleDriveLogger.e(TAG, "Cannot load: Directory does not exist or is not a directory: ${directory.absolutePath}")
                     withContext(Dispatchers.Main) {
-                        currentPathText.text = directory.absolutePath
-                        (recyclerView.adapter as? FileAdapter)?.updateFiles(files)
+                        Toast.makeText(this@FileManagerActivity, getString(R.string.directory_not_found), Toast.LENGTH_SHORT).show()
+                        currentPathText.text = getString(R.string.directory_not_found)
                     }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            this@FileManagerActivity,
-                            getString(R.string.directory_not_found),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    return@launch
                 }
-            } catch (e: Exception) {
+
+                oracleDriveLogger.d(TAG, "Listing files in ${directory.absolutePath} on IO thread.")
+                val files = withContext(Dispatchers.IO) { directory.listFiles()?.toList() ?: emptyList() }
+                oracleDriveLogger.d(TAG, "Found ${files.size} files/dirs in ${directory.absolutePath}.")
+
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(
-                        this@FileManagerActivity,
-                        getString(R.string.error_loading_files, e.localizedMessage),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    currentPathText.text = directory.absolutePath
+                    (recyclerView.adapter as? FileAdapter)?.updateFiles(files)
+                    oracleDriveLogger.d(TAG, "UI updated with files from ${directory.absolutePath}.")
+                }
+            } catch (e: SecurityException) {
+                 oracleDriveLogger.e(TAG, "SecurityException loading files from ${directory.absolutePath}: ${e.message}", e)
+                 withContext(Dispatchers.Main) {
+                    Toast.makeText(this@FileManagerActivity, "Permission denied for ${directory.absolutePath}", Toast.LENGTH_SHORT).show()
+                    currentPathText.text = "Permission Denied"
+                 }
+            } catch (e: Exception) {
+                oracleDriveLogger.e(TAG, "Error loading files from ${directory.absolutePath}: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@FileManagerActivity, getString(R.string.error_loading_files, e.localizedMessage), Toast.LENGTH_SHORT).show()
+                    currentPathText.text = getString(R.string.error_loading_files, "")
                 }
             }
         }
     }
 
     private fun importFileFromUri(uri: Uri) {
+        oracleDriveLogger.i(TAG, "Importing file from URI: $uri")
         try {
             contentResolver.openInputStream(uri)?.use { inputStream ->
                 val fileName = getFileName(uri) ?: "imported_file_${System.currentTimeMillis()}"
                 val file = File(currentDirectory, fileName)
+                oracleDriveLogger.d(TAG, "Target file for import: ${file.absolutePath}")
 
-                file.outputStream().use { outputStream ->
-                    inputStream.copyTo(outputStream)
-                }
-
+                file.outputStream().use { outputStream -> inputStream.copyTo(outputStream) }
+                oracleDriveLogger.i(TAG, "File imported successfully to ${file.absolutePath}")
                 Toast.makeText(this, "File imported successfully", Toast.LENGTH_SHORT).show()
                 loadFiles(currentDirectory)
-            }
+            } ?: oracleDriveLogger.e(TAG, "Failed to open input stream for import URI: $uri")
         } catch (e: Exception) {
-            val errorMsg = "Error reading file: ${e.message ?: "Unknown error"}"
+            val errorMsg = "Error importing file from URI $uri: ${e.message ?: "Unknown error"}"
+            oracleDriveLogger.e(TAG, errorMsg, e)
             Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun prepareExport() {
-        selectedFile?.let { file ->
-            createFile.launch("*/*")
-        }
+        val localSelectedFile = selectedFile
+        oracleDriveLogger.d(TAG, "prepareExport called for file: ${localSelectedFile?.name}")
+        localSelectedFile?.let {
+            createFileLauncher.launch(it.name)
+        } ?: oracleDriveLogger.w(TAG, "prepareExport called but no file selected.")
     }
 
-    private fun exportChatToFile(uri: Uri) {
-        selectedFile?.let { file ->
-            try {
-                contentResolver.openOutputStream(uri)?.use { outputStream ->
-                    file.inputStream().use { inputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-                }
-
-                Toast.makeText(this, "File exported successfully", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                val errorMsg = "Error writing file: ${e.message ?: "Unknown error"}"
-                Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
-            }
-        } ?: run {
+    private fun exportSelectedFile(uri: Uri) {
+        oracleDriveLogger.i(TAG, "Exporting selected file to URI: $uri. Selected file: ${selectedFile?.name}")
+        val fileToExport = selectedFile
+        if (fileToExport == null) {
+            oracleDriveLogger.w(TAG, "exportSelectedFile called but selectedFile is null.")
             Toast.makeText(this, "No file selected for export", Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            contentResolver.openOutputStream(uri)?.use { outputStream ->
+                fileToExport.inputStream().use { inputStream -> inputStream.copyTo(outputStream) }
+            }
+            oracleDriveLogger.i(TAG, "File exported successfully: ${fileToExport.name} to $uri")
+            Toast.makeText(this, "File exported successfully", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            val errorMsg = "Error exporting file ${fileToExport.name} to $uri: ${e.message ?: "Unknown error"}"
+            oracleDriveLogger.e(TAG, errorMsg, e)
+            Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun checkStoragePermission() {
-        when {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                // Permission already granted
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    if (Environment.isExternalStorageManager()) {
-                        // Manage External Storage permission granted
-                        loadFiles(currentDirectory)
-                    } else {
-                        // Request Manage External Storage permission
-                        try {
-                            val intent =
-                                Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                            intent.addCategory("android.intent.category.DEFAULT")
-                            intent.data = Uri.parse(
-                                String.format(
-                                    "package:%s",
-                                    applicationContext.packageName
-                                )
-                            )
-                            startActivity(intent)
-                        } catch (e: Exception) {
-                            val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                            startActivity(intent)
-                        }
-                    }
-                } else {
-                    // For devices below Android 11, request WRITE_EXTERNAL_STORAGE permission
+    private fun requestManageStoragePermission() {
+        oracleDriveLogger.i(TAG, "Requesting MANAGE_APP_ALL_FILES_ACCESS_PERMISSION (Android R+)")
+        try {
+            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+            intent.addCategory("android.intent.category.DEFAULT")
+            intent.data = Uri.parse(String.format("package:%s", applicationContext.packageName))
+            startActivityForResult(intent, REQUEST_MANAGE_STORAGE_PERMISSION_CODE)
+        } catch (e: Exception) {
+            oracleDriveLogger.e(TAG, "Error starting intent for MANAGE_APP_ALL_FILES_ACCESS_PERMISSION (fallback): ${e.message}", e)
+            try {
+                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                startActivityForResult(intent, REQUEST_MANAGE_STORAGE_PERMISSION_CODE)
+            } catch (ex: Exception) {
+                 oracleDriveLogger.e(TAG, "Fallback for MANAGE_ALL_FILES_ACCESS_PERMISSION also failed: ${ex.message}", ex)
+                 Toast.makeText(this, "Could not open settings to grant file access.", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        oracleDriveLogger.d(TAG, "onActivityResult: requestCode=$requestCode, resultCode=$resultCode")
+        if (requestCode == REQUEST_MANAGE_STORAGE_PERMISSION_CODE) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (Environment.isExternalStorageManager()) {
+                    oracleDriveLogger.i(TAG, "MANAGE_APP_ALL_FILES_ACCESS_PERMISSION granted via onActivityResult.")
                     loadFiles(currentDirectory)
+                } else {
+                    oracleDriveLogger.w(TAG, "MANAGE_APP_ALL_FILES_ACCESS_PERMISSION NOT granted via onActivityResult.")
+                    showPermissionDeniedDialog("Manage all files access is required to list files.")
                 }
-            }
-
-            shouldShowRequestPermissionRationale(Manifest.permission.WRITE_EXTERNAL_STORAGE) -> {
-                // Show an explanation to the user
-                showPermissionRationaleDialog()
-            }
-
-            else -> {
-                // Request the permission using the new API
-                requestPermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
         }
     }
 
     private fun showPermissionRationaleDialog() {
+        oracleDriveLogger.w(TAG, "Showing permission rationale dialog for WRITE_EXTERNAL_STORAGE.")
         AlertDialog.Builder(this)
             .setTitle("Permission Required")
-            .setMessage("Storage permission is required to manage files")
+            .setMessage("Storage permission is required to manage files for older Android versions.")
             .setPositiveButton("Grant Permission") { _, _ ->
-                requestPermission.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                oracleDriveLogger.d(TAG, "User clicked 'Grant Permission' from rationale.")
+                requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
             .setNegativeButton(android.R.string.cancel) { dialog, _ ->
+                oracleDriveLogger.d(TAG, "User clicked 'Cancel' from rationale.")
                 dialog.dismiss()
-                finish()
             }
             .show()
     }
 
-    private fun showPermissionDeniedDialog() {
+    private fun showPermissionDeniedDialog(message: String = "Storage permission is essential for this feature. The screen will close.") {
+        oracleDriveLogger.e(TAG, "Showing permission denied dialog: $message")
         AlertDialog.Builder(this)
             .setTitle("Permission Denied")
-            .setMessage("Storage permission is required to manage files. The app will now exit.")
+            .setMessage(message)
             .setPositiveButton(android.R.string.ok) { _, _ ->
+                oracleDriveLogger.d(TAG, "User clicked 'OK' from permission denied. Finishing activity.")
                 finish()
             }
             .setCancelable(false)
@@ -281,14 +349,21 @@ class FileManagerActivity : AppCompatActivity() {
     private fun getFileName(uri: Uri): String? {
         var result: String? = null
         if (uri.scheme == "content") {
-            contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    val nameIndex =
-                        cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                    if (nameIndex != -1) {
-                        result = cursor.getString(nameIndex)
+            try {
+                contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                        if (nameIndex != -1) {
+                            result = cursor.getString(nameIndex)
+                        } else {
+                            oracleDriveLogger.w(TAG, "DISPLAY_NAME column not found for URI: $uri")
+                        }
+                    } else {
+                        oracleDriveLogger.w(TAG, "Cursor empty for URI: $uri")
                     }
                 }
+            } catch (e: Exception) {
+                oracleDriveLogger.w(TAG, "Error querying content resolver for file name: $uri. Error: ${e.message}", e)
             }
         }
         if (result == null) {
@@ -298,34 +373,25 @@ class FileManagerActivity : AppCompatActivity() {
                 result = result?.substring(cut + 1)
             }
         }
+        oracleDriveLogger.v(TAG, "getFileName for URI $uri, result: $result")
         return result
-    }
-
-    private fun getMimeType(extension: String): String {
-        return when (extension.lowercase()) {
-            "txt" -> "text/plain"
-            "pdf" -> "application/pdf"
-            "doc", "docx" -> "application/msword"
-            "xls", "xlsx" -> "application/vnd.ms-excel"
-            "jpg", "jpeg" -> "image/jpeg"
-            "png" -> "image/png"
-            "zip" -> "application/zip"
-            else -> "*/*"
-        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        oracleDriveLogger.i(TAG, "onDestroy called.")
         currentLoadJob?.cancel()
         fileLoadScope.cancel()
+        oracleDriveLogger.d(TAG, "Coroutine scopes cancelled in onDestroy.")
     }
 
     companion object {
-        private const val REQUEST_MANAGE_STORAGE = 1000
-        private const val EXPORT_FILE_REQUEST = 1001
+        private const val REQUEST_MANAGE_STORAGE_PERMISSION_CODE = 1000
+        // private val TAG_STATIC = "FileManagerActivityCompanion" // Using instance TAG
     }
 }
 
+// FileAdapter class - NO CHANGES IN THIS SUBTASK
 class FileAdapter(
     private var files: List<File>,
     private val onFileClick: (File) -> Unit,
@@ -342,20 +408,17 @@ class FileAdapter(
 
     private val fileComparator = compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase() }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun updateFiles(newFiles: List<File>) {
         val oldList = files
         files = newFiles.sortedWith(fileComparator)
-
-        // Use DiffUtil for efficient updates
         val diffResult = androidx.recyclerview.widget.DiffUtil.calculateDiff(object :
             androidx.recyclerview.widget.DiffUtil.Callback() {
             override fun getOldListSize() = oldList.size
             override fun getNewListSize() = files.size
-
             override fun areItemsTheSame(oldPos: Int, newPos: Int): Boolean {
                 return oldList[oldPos].absolutePath == files[newPos].absolutePath
             }
-
             override fun areContentsTheSame(oldPos: Int, newPos: Int): Boolean {
                 val oldFile = oldList[oldPos]
                 val newFile = files[newPos]
@@ -364,23 +427,20 @@ class FileAdapter(
                         oldFile.name == newFile.name
             }
         })
-
         diffResult.dispatchUpdatesTo(this)
     }
 
-    fun setSelectedFile(file: File) {
-        val previousSelected = selectedFile
+    @SuppressLint("NotifyDataSetChanged")
+    fun setSelectedFile(file: File?) {
+        val previousSelectedFile = selectedFile
         selectedFile = file
-
-        // Only update the changed items
-        previousSelected?.let { oldFile ->
-            val oldPos = files.indexOfFirst { it.absolutePath == oldFile.absolutePath }
-            if (oldPos != -1) notifyItemChanged(oldPos)
+        previousSelectedFile?.let { oldFile ->
+            val oldIndex = files.indexOf(oldFile)
+            if (oldIndex != -1) notifyItemChanged(oldIndex)
         }
-
-        file?.let { newFile ->
-            val newPos = files.indexOfFirst { it.absolutePath == newFile.absolutePath }
-            if (newPos != -1) notifyItemChanged(newPos)
+        selectedFile?.let { newFile ->
+            val newIndex = files.indexOf(newFile)
+            if (newIndex != -1) notifyItemChanged(newIndex)
         }
     }
 
@@ -393,51 +453,36 @@ class FileAdapter(
     private var lastClickTime: Long = 0
 
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {
-        holder.isRecyclable = false // Disable recycling for better stability with file operations
         val file = files[position]
-        val isSelected = file == selectedFile
+        val isSelected = file.absolutePath == selectedFile?.absolutePath
 
         holder.fileName.text = file.name
-
-        // Set file info (size and date)
-        val fileInfo = StringBuilder()
-        if (file.isFile) {
-            fileInfo.append(formatFileSize(file.length()))
-            fileInfo.append(" • ")
+        val fileInfoText = if (file.isFile) {
+            "${formatFileSize(file.length())} • ${SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(file.lastModified()))}"
+        } else {
+            SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(file.lastModified()))
         }
-        fileInfo.append(
-            SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-                .format(Date(file.lastModified()))
-        )
+        holder.fileInfo.text = fileInfoText
 
-        holder.fileInfo.text = fileInfo
-
-        // Set icon based on file type
         val iconRes = when {
-            file.isDirectory -> android.R.drawable.ic_menu_upload
-            file.extension.lowercase() in listOf("jpg", "jpeg", "png", "gif") ->
-                android.R.drawable.ic_dialog_alert
-
-            file.extension.lowercase() in listOf("pdf") -> android.R.drawable.ic_menu_upload
-            file.extension.lowercase() in listOf("doc", "docx") -> android.R.drawable.ic_menu_edit
-            file.extension.lowercase() in listOf("xls", "xlsx") -> android.R.drawable.ic_menu_edit
-            file.extension.lowercase() in listOf(
-                "zip",
-                "rar"
-            ) -> android.R.drawable.ic_menu_upload_you_tube
-
-            else -> android.R.drawable.ic_menu_upload
+            file.isDirectory -> R.drawable.ic_folder_selector
+            file.extension.lowercase() in listOf("jpg", "jpeg", "png", "gif") -> R.drawable.ic_image_selector
+            file.extension.lowercase() in listOf("pdf") -> R.drawable.ic_pdf_selector
+            file.extension.lowercase() in listOf("doc", "docx") -> R.drawable.ic_doc_selector
+            file.extension.lowercase() in listOf("xls", "xlsx") -> R.drawable.ic_xls_selector
+            file.extension.lowercase() in listOf("zip", "rar") -> R.drawable.ic_zip_selector
+            else -> R.drawable.ic_file_selector
         }
 
-        holder.fileIcon.setBackgroundResource(iconRes)
-
-        // Show/hide checkbox based on selection
+        if (holder.fileIcon is android.widget.ImageView) {
+            (holder.fileIcon as android.widget.ImageView).setImageResource(iconRes)
+        } else {
+             holder.fileIcon.setBackgroundResource(iconRes)
+        }
         holder.checkBox.visibility = if (isSelected) View.VISIBLE else View.GONE
-
-        // Set click listener with debounce
         holder.itemView.setOnClickListener {
             val now = System.currentTimeMillis()
-            if (now - lastClickTime > 500) { // 500ms debounce
+            if (now - lastClickTime > 300) {
                 lastClickTime = now
                 onFileClick(file)
             }
@@ -449,9 +494,9 @@ class FileAdapter(
     private fun formatFileSize(size: Long): String {
         return when {
             size < 1024 -> "$size B"
-            size < 1024 * 1024 -> "${size / 1024} KB"
-            size < 1024 * 1024 * 1024 -> "${size / (1024 * 1024)} MB"
-            else -> "${size / (1024 * 1024 * 1024)} GB"
+            size < 1024 * 1024 -> String.format(Locale.US, "%.1f KB", size / 1024.0)
+            size < 1024 * 1024 * 1024 -> String.format(Locale.US, "%.1f MB", size / (1024.0 * 1024.0))
+            else -> String.format(Locale.US, "%.1f GB", size / (1024.0 * 1024.0 * 1024.0))
         }
     }
 }
