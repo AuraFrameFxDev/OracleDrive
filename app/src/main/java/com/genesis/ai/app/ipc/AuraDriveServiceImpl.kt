@@ -1,113 +1,158 @@
-// In OracleDrive - Genesisystem/app/src/main/java/com/genesis/ai/app/ipc/AuraDriveServiceImpl.kt
-package com.genesis.ai.app.ipc // IMPORTANT: Use OracleDrive's package name here
+package com.genesis.ai.app.ipc
 
 import android.app.Service
 import android.content.Intent
 import android.os.IBinder
-import android.util.Log
-import com.example.app.ipc.IAuraDriveService // IMPORT THE GENERATED AIDL INTERFACE (from common package)
+import android.os.Build // ADDED IMPORT
+import com.example.app.ipc.IAuraDriveService
 import com.genesis.ai.app.data.model.LSPosedModuleRequest
-// Assuming LSPosedModuleResponse might be used later or for more detailed return, though current AIDL returns String
-// import com.genesis.ai.app.data.model.LSPosedModuleResponse
-import com.genesis.ai.app.data.model.GenesisRepositoryNew // To make API calls
-
+import com.genesis.ai.app.data.model.GenesisRepositoryNew
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel // To cancel the scope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking // To make the AIDL method call effectively synchronous for the client
-                                  // while handling async work internally. Consider implications.
-import retrofit2.awaitResponse // For async API calls
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext // ADDED IMPORT
+import retrofit2.awaitResponse
+import com.genesis.ai.app.GenesisApplication
+import com.genesis.ai.app.data.logging.OracleDriveLogger
+import com.google.gson.Gson // ADDED IMPORT
+import com.google.gson.JsonObject // ADDED IMPORT
+import java.io.File // ADDED IMPORT for checkRootStatus
 
 class AuraDriveServiceImpl : Service() {
     private val TAG = "AuraDriveService"
-    // Create a service-specific coroutine scope. SupervisorJob allows children to fail independently.
-    // Dispatchers.IO is suitable for network or disk operations.
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private lateinit var oracleDriveLogger: OracleDriveLogger
 
-    // This is the implementation of the AIDL interface
+    override fun onCreate() {
+        super.onCreate()
+        oracleDriveLogger = (application as GenesisApplication).oracleDriveLogger
+        oracleDriveLogger.i(TAG, "AuraDriveService onCreate.")
+    }
+
     private val binder = object : IAuraDriveService.Stub() {
         override fun getOracleDriveStatus(): String {
-            Log.d(TAG, "AuraFrameFX requested OracleDrive status.")
-            // You can get current status from your internal state, e.g., if container is running
-            // This is a synchronous call.
-            return "OracleDrive is running in container mode. LSPosed modules are active. (Simulated status)"
+            oracleDriveLogger.d(TAG, "AIDL call: getOracleDriveStatus (enhanced) requested.")
+            val isRooted = checkRootStatus()
+            val backendStatus = try {
+                // A light check, not a full API call if not necessary
+                if (GenesisRepositoryNew.api != null) "Available" else "Unavailable"
+            } catch (e: Exception) {
+                "Error checking backend"
+            }
+            return "OracleDrive Active. Container Root: ${if (isRooted) "YES" else "NO"}. Backend: $backendStatus."
         }
 
         override fun toggleLSPosedModule(packageName: String, enable: Boolean): String {
-            Log.d(TAG, "AuraFrameFX requested to toggle LSPosed module: $packageName, enable: $enable. Processing...")
-
-            // The AIDL call itself is synchronous from the client's perspective.
-            // We use runBlocking here to wait for the suspend function's result.
-            // This means the client (AuraFrameFX) will block until this method returns.
-            // This is often desired in AIDL if the client expects an immediate result from the method call.
-            // The actual network operation within toggleModuleOnBackend still runs on Dispatchers.IO via serviceScope.
+            oracleDriveLogger.d(TAG, "AIDL call: toggleLSPosedModule requested by AuraFrameFX for package '$packageName', enable: $enable.")
             var resultMessage: String
-
-            // Using runBlocking to bridge the suspend world with the synchronous AIDL method.
-            // This is a common pattern for AIDL calls that need to perform async work but return a direct result.
-            // Ensure that any long-running operations within toggleModuleOnBackend are cancellable
-            // and handle exceptions gracefully.
-            runBlocking { // This will block the binder thread until the inner coroutine completes.
+            runBlocking { // Blocks the binder thread
                 resultMessage = toggleModuleOnBackend(packageName, enable)
             }
+            oracleDriveLogger.d(TAG, "AIDL call: toggleLSPosedModule for '$packageName' processed. Result: $resultMessage")
+            return resultMessage // This is the immediate response.
+        }
 
-            Log.d(TAG, "Toggle request for $packageName processed. Result: $resultMessage")
-            return resultMessage
+        override fun getDetailedInternalStatus(): String {
+            oracleDriveLogger.d(TAG, "AIDL call: getDetailedInternalStatus requested.")
+            val appVersionName = try {
+                applicationContext.packageManager.getPackageInfo(applicationContext.packageName, 0).versionName
+            } catch (e: Exception) {
+                oracleDriveLogger.w(TAG, "Could not get app version name: ${e.message}", e)
+                "Unknown"
+            }
+
+            val jsonObject = JsonObject().apply {
+                addProperty("timestamp", System.currentTimeMillis())
+                addProperty("oracleDriveAppVersion", appVersionName)
+                addProperty("isRooted", checkRootStatus()) // Internal helper
+                addProperty("containerOSVersion", Build.VERSION.RELEASE)
+                addProperty("containerSDKVersion", Build.VERSION.SDK_INT)
+                val backendStatus = try {
+                    if (GenesisRepositoryNew.api != null) "Available" else "Unavailable"
+                } catch (e: Exception) { "Error" }
+                addProperty("backendConnection", backendStatus)
+                // TODO: Add actual LSPosed status (e.g., if LSPosed is running, number of active modules)
+                // This would require executing root commands here or querying LSPosed's internal state.
+                addProperty("lsposedStatus", "Active (simulated, root check needed for real status)")
+                addProperty("activeLSPosedModulesCount", "0 (simulated, needs implementation)")
+            }
+            val jsonString = Gson().toJson(jsonObject)
+            oracleDriveLogger.i(TAG, "Detailed internal status generated: $jsonString")
+            return jsonString
+        }
+
+        override fun getInternalDiagnosticsLog(): String {
+            oracleDriveLogger.d(TAG, "AIDL call: getInternalDiagnosticsLog requested.")
+            var logs = "Error reading logs." // Default error message
+            try {
+                // readCurrentDayLogs is a suspend function, so call it within a coroutine context.
+                // runBlocking is used here because AIDL calls are synchronous from client's perspective.
+                runBlocking {
+                    logs = oracleDriveLogger.readCurrentDayLogs()
+                }
+                oracleDriveLogger.i(TAG, "Internal diagnostics log retrieved. Length: ${logs.length}")
+            } catch (e: Exception) {
+                oracleDriveLogger.e(TAG, "Error in getInternalDiagnosticsLog while calling readCurrentDayLogs: ${e.message}", e)
+                logs = "Exception reading logs: ${e.message}"
+            }
+            return logs
         }
     }
 
-    // Suspend function to handle the actual backend call
+    // Suspend function to handle the actual backend call for toggleLSPosedModule
     private suspend fun toggleModuleOnBackend(packageName: String, enable: Boolean): String {
-        // This function is called within runBlocking from the AIDL method,
-        // but its internal operations (the API call) are still async-friendly.
         return try {
-            // In a real scenario, you'd get the auth token from OracleDrive's own secure storage
-            // or ensure GenesisRepositoryNew is configured with necessary auth interceptors.
-            // The issue description for MainActivity's toggleLSPosedModule involved getting a token.
-            // For a service, this might mean the service needs a way to access a valid token
-            // or the API calls made by GenesisRepositoryNew are already authenticated.
-            // For this implementation, we'll assume GenesisRepositoryNew.api handles auth.
-
-            Log.i(TAG, "Calling backend to toggle module $packageName to $enable")
+            oracleDriveLogger.i(TAG, "Calling backend (from toggleModuleOnBackend) to toggle module $packageName to $enable")
             val request = LSPosedModuleRequest(packageName, enable)
-
-            // Using awaitResponse() to make the Retrofit call suspendable
             val response = GenesisRepositoryNew.api.toggleLSPosedModule(request).awaitResponse()
 
             if (response.isSuccessful && response.body() != null) {
                 val respBody = response.body()!!
-                val msg = "Module '${respBody.packageName}' toggled: ${respBody.enabled}. Status: ${respBody.status} (via OracleDrive Service)"
-                Log.d(TAG, msg)
+                val msg = "Module '${respBody.packageName}' toggled: ${respBody.enabled}. Status: ${respBody.status} (via OracleDrive Service backend call)"
+                oracleDriveLogger.i(TAG, msg)
                 msg
             } else {
                 val errorBody = response.errorBody()?.string() ?: "Unknown error"
                 val msg = "Failed to toggle module $packageName via backend: ${response.code()} - $errorBody"
-                Log.e(TAG, msg)
+                oracleDriveLogger.e(TAG, msg)
                 msg
             }
         } catch (e: Exception) {
             val msg = "Exception calling backend for module $packageName toggle: ${e.message}"
-            Log.e(TAG, msg, e)
+            oracleDriveLogger.e(TAG, msg, e)
             msg
         }
     }
 
-    override fun onBind(intent: Intent?): IBinder {
-        Log.d(TAG, "AuraDriveService onBind received. Returning binder.")
-        return binder
+    // Helper to check for root status (simple check, could be more robust)
+    private fun checkRootStatus(): Boolean {
+        oracleDriveLogger.d(TAG, "Performing checkRootStatus().")
+        val paths = arrayOf(
+            "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su",
+            "/system/xbin/su", "/data/local/xbin/su", "/data/local/bin/su",
+            "/system/sd/xbin/su", "/system/bin/failsafe/su", "/data/local/su",
+            "/su/bin/su" // Magisk
+        )
+        for (path in paths) {
+            if (File(path).exists()) {
+                oracleDriveLogger.i(TAG, "Root check: Found 'su' binary at $path.")
+                return true
+            }
+        }
+        oracleDriveLogger.i(TAG, "Root check: 'su' binary not found in common paths.")
+        return false
     }
 
-    override fun onCreate() {
-        super.onCreate()
-        Log.d(TAG, "AuraDriveService onCreate.")
+    override fun onBind(intent: Intent?): IBinder {
+        oracleDriveLogger.i(TAG, "AuraDriveService onBind received. Returning binder. Intent: $intent")
+        return binder
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // Cancel all coroutines started by this service scope when the service is destroyed.
         serviceScope.cancel()
-        Log.d(TAG, "AuraDriveService onDestroy. Coroutine scope cancelled.")
+        oracleDriveLogger.i(TAG, "AuraDriveService onDestroy. Coroutine scope cancelled.")
     }
 }

@@ -17,6 +17,12 @@ interface IAuraDriveService {
      */
     String toggleLSPosedModule(String packageName, boolean enable);
 
+    // NEW: Get detailed internal status as a JSON string or key-value map
+    String getDetailedInternalStatus();
+
+    // NEW: Get OracleDrive's internal log for the current day
+    String getInternalDiagnosticsLog();
+
     // TODO: Add more methods as needed, e.g.,
     // String runScriptInContainer(String scriptContent);
     // Parcelable getModuleList(); // If you want to retrieve a list of modules

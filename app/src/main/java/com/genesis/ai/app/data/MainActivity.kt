@@ -41,16 +41,19 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import com.genesis.ai.app.GenesisApplication // ADDED IMPORT
+import com.genesis.ai.app.data.logging.OracleDriveLogger // ADDED IMPORT
 
 private const val MIME_TYPE = "application/octet-stream"
 private val FILE_PICKER_MIME_TYPES = arrayOf("*/*")  // Changed to array of strings
 
 class MainActivity : AppCompatActivity() {
     companion object {
+        private const val TAG = "MainActivity" // For logger
         private const val REQUEST_CODE_WRITE_STORAGE = 1001
         private const val REQUEST_CODE_READ_STORAGE = 1002
 
-        private fun getRequiredPermissions(): Array<String> {
+        private fun getRequiredPermissions(): Array<String> { // Static method, cannot use instance logger here
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 arrayOf(
                     Manifest.permission.READ_MEDIA_IMAGES,
@@ -67,6 +70,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private lateinit var oracleDriveLogger: OracleDriveLogger // ADDED
 
     private val messageReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -93,40 +98,41 @@ class MainActivity : AppCompatActivity() {
     // For importing a file using SAF
     private val filePicker =
         registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            oracleDriveLogger.d(TAG, "filePicker (GetContent) result URI: $uri")
             uri?.let {
                 try {
                     val inputStream = contentResolver.openInputStream(it)
-                    val fileBytes = inputStream?.readBytes() ?: return@registerForActivityResult
+                    val fileBytes = inputStream?.readBytes()
+                    if (fileBytes == null) {
+                        oracleDriveLogger.w(TAG, "Failed to read bytes from URI: $it")
+                        Toast.makeText(this@MainActivity, "Failed to read file.", Toast.LENGTH_SHORT).show()
+                        return@registerForActivityResult
+                    }
+                    oracleDriveLogger.d(TAG, "Read ${fileBytes.size} bytes from URI: $it")
                     val reqBody = fileBytes.toRequestBody(MIME_TYPE.toMediaTypeOrNull())
-                    val filePart =
-                        MultipartBody.Part.createFormData("file", "importedfile", reqBody)
+                    val filePart = MultipartBody.Part.createFormData("file", "importedfile", reqBody)
+
+                    oracleDriveLogger.i(TAG, "Importing file via API...")
                     GenesisRepositoryNew.api.importFile(filePart)
                         .enqueue(object : Callback<ImportResponse> {
-                            override fun onResponse(
-                                call: Call<ImportResponse>,
-                                response: Response<ImportResponse>,
-                            ) {
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "Import: ${response.body()?.status}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                            override fun onResponse(call: Call<ImportResponse>, response: Response<ImportResponse>) {
+                                if (response.isSuccessful && response.body() != null) {
+                                    oracleDriveLogger.i(TAG, "Import API call successful: ${response.body()?.status}")
+                                    Toast.makeText(this@MainActivity, "Import: ${response.body()?.status}", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    oracleDriveLogger.e(TAG, "Import API call failed: ${response.code()} - ${response.message()}")
+                                    Toast.makeText(this@MainActivity, "Import failed: Server error ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
                             }
 
                             override fun onFailure(call: Call<ImportResponse>, t: Throwable) {
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "Import failed",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                oracleDriveLogger.e(TAG, "Import API call failure: ${t.message}", t)
+                                Toast.makeText(this@MainActivity, "Import failed: ${t.message}", Toast.LENGTH_SHORT).show()
                             }
                         })
                 } catch (e: Exception) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Error reading file: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    oracleDriveLogger.e(TAG, "Error reading file from URI $it: ${e.message}", e)
+                    Toast.makeText(this@MainActivity, "Error reading file: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -134,17 +140,20 @@ class MainActivity : AppCompatActivity() {
     // For picking a file using a custom FileManagerActivity
     private val fileManagerLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            oracleDriveLogger.d(TAG, "fileManagerLauncher result code: ${result.resultCode}")
             if (result.resultCode == RESULT_OK) {
                 val fileUri = result.data?.data
+                oracleDriveLogger.d(TAG, "File URI from FileManager: $fileUri")
                 fileUri?.let { uri ->
                     try {
                         val inputStream = contentResolver.openInputStream(uri)
                         val fileContent = inputStream?.bufferedReader().use { it?.readText() } ?: ""
                         messageInput.setText(fileContent)
+                        oracleDriveLogger.i(TAG, "File content loaded into messageInput from $fileUri")
                         Toast.makeText(this, "File loaded successfully", Toast.LENGTH_SHORT).show()
                     } catch (e: Exception) {
-                        Toast.makeText(this, "Error reading file: ${e.message}", Toast.LENGTH_SHORT)
-                            .show()
+                        oracleDriveLogger.e(TAG, "Error reading file from FileManager URI $fileUri: ${e.message}", e)
+                        Toast.makeText(this, "Error reading file: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -154,17 +163,14 @@ class MainActivity : AppCompatActivity() {
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
+        oracleDriveLogger.d(TAG, "storagePermissionLauncher result: $permissions")
         val allGranted = permissions.entries.all { it.value }
         if (allGranted) {
-            // All permissions granted, proceed with file operation
+            oracleDriveLogger.i(TAG, "All storage permissions granted by user.")
             filePicker.launch(FILE_PICKER_MIME_TYPES[0])
         } else {
-            // Explain why the permission is needed
-            Toast.makeText(
-                this,
-                "Storage permissions are required to access files",
-                Toast.LENGTH_LONG
-            ).show()
+            oracleDriveLogger.w(TAG, "Not all storage permissions granted by user.")
+            Toast.makeText(this, "Storage permissions are required to access files", Toast.LENGTH_LONG).show()
 
             // Optionally, show app settings to manually grant permissions
             /*
@@ -183,56 +189,92 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        // Logger might not be initialized if onStart is called before onCreate finishes (unlikely but possible in edge cases)
+        if (::oracleDriveLogger.isInitialized) {
+            oracleDriveLogger.i(TAG, "onStart called.")
+        } else {
+            Log.i(TAG, "onStart called, logger not yet initialized.") // Fallback to Android Log
+        }
         val filter = IntentFilter(GenesisAIService.PROACTIVE_MESSAGE_ACTION)
-        registerReceiver(messageReceiver, filter)
+        // Handle receiver registration for different Android versions
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(messageReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            if (::oracleDriveLogger.isInitialized) oracleDriveLogger.d(TAG, "Proactive message receiver registered (Android 13+).")
+        } else {
+            registerReceiver(messageReceiver, filter)
+            if (::oracleDriveLogger.isInitialized) oracleDriveLogger.d(TAG, "Proactive message receiver registered.")
+        }
     }
 
     override fun onStop() {
         super.onStop()
+        if (::oracleDriveLogger.isInitialized) {
+            oracleDriveLogger.i(TAG, "onStop called.")
+        } else {
+            Log.i(TAG, "onStop called, logger not yet initialized.")
+        }
         try {
             unregisterReceiver(messageReceiver)
+            if (::oracleDriveLogger.isInitialized) oracleDriveLogger.d(TAG, "Proactive message receiver unregistered.")
         } catch (e: IllegalArgumentException) {
-            // Receiver was not registered
-            // This can happen if the activity is stopped before it's fully started
+            if (::oracleDriveLogger.isInitialized) oracleDriveLogger.w(TAG, "Error unregistering receiver (already unregistered or not registered): ${e.message}", e)
+            else Log.w(TAG, "Error unregistering receiver: ${e.message}", e)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::oracleDriveLogger.isInitialized) {
+            oracleDriveLogger.i(TAG, "onDestroy called.")
+        } else {
+            Log.i(TAG, "onDestroy called, logger not yet initialized.")
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Initialize logger first
+        oracleDriveLogger = (application as GenesisApplication).oracleDriveLogger
+        oracleDriveLogger.i(TAG, "onCreate called.")
+
         setContentView(R.layout.activity_main)
+        oracleDriveLogger.d(TAG, "Content view set.")
 
-        // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
+        oracleDriveLogger.d(TAG, "FirebaseAuth instance obtained.")
 
-        // Initialize views
         chatLog = findViewById(R.id.chatLog)
-        messageInput = findViewById(R.id.messageInput) // This is an EditText
+        messageInput = findViewById(R.id.messageInput)
         sendButton = findViewById(R.id.sendButton)
-        rootToggle = findViewById(R.id.rootToggle) // Existing switch
-        // importButton = findViewById(R.id.importButton) // Example, if it exists and needs init
+        rootToggle = findViewById(R.id.rootToggle)
         exportButton = findViewById(R.id.exportButton)
         fileManagerButton = findViewById(R.id.fileManagerButton)
         aiQuestions = findViewById(R.id.aiQuestions)
-
-        // Initialize NEW UI Elements for LSPosed Module Control
-        // Assuming IDs from the XML provided in the issue:
         moduleToggleSwitch = findViewById(R.id.moduleToggleSwitch)
         moduleNameInput = findViewById(R.id.moduleNameInput)
+        oracleDriveLogger.d(TAG, "Views initialized.")
 
-        // Set up click listeners
-        sendButton.setOnClickListener { sendMessage() }
-        exportButton.setOnClickListener { checkPermissionsAndExport() }
-        fileManagerButton.setOnClickListener { openFileManager() }
-        // importButton.setOnClickListener { checkStoragePermissionAndPickFile() } // If importButton is used
-
-        // Listener for the new module toggle switch
+        sendButton.setOnClickListener {
+            oracleDriveLogger.d(TAG, "Send button clicked.")
+            sendMessage()
+        }
+        exportButton.setOnClickListener {
+            oracleDriveLogger.d(TAG, "Export button clicked.")
+            checkPermissionsAndExport()
+        }
+        fileManagerButton.setOnClickListener {
+            oracleDriveLogger.d(TAG, "File Manager button clicked.")
+            openFileManager()
+        }
         moduleToggleSwitch.setOnCheckedChangeListener { _, isChecked ->
             val packageName = moduleNameInput.text.toString()
+            oracleDriveLogger.d(TAG, "Module toggle switch changed for '$packageName' to $isChecked.")
             toggleLSPosedModule(packageName, isChecked)
         }
-        // TODO: Add a button or list view to select modules instead of manual input (as per issue comment)
+        oracleDriveLogger.d(TAG, "Click listeners set.")
 
         initializeService()
+        oracleDriveLogger.i(TAG, "onCreate completed.")
     }
 
     private fun showToast(message: String) {
@@ -240,102 +282,97 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun toggleLSPosedModule(packageName: String, enable: Boolean) {
+        oracleDriveLogger.i(TAG, "toggleLSPosedModule called for package '$packageName', enable: $enable")
         if (packageName.isBlank()) {
+            oracleDriveLogger.w(TAG, "Module package name is blank.")
             showToast("Module package name cannot be empty.")
-            moduleToggleSwitch.isChecked = !enable // Revert toggle state
+            moduleToggleSwitch.isChecked = !enable
             return
         }
         if (auth.currentUser == null) {
+            oracleDriveLogger.w(TAG, "User not signed in. Cannot toggle module.")
             showToast("Please sign in first to manage modules.")
-            moduleToggleSwitch.isChecked = !enable // Revert toggle state
+            moduleToggleSwitch.isChecked = !enable
             return
         }
 
         val request = LSPosedModuleRequest(packageName = packageName, enable = enable)
-        showToast("Requesting to toggle module: $packageName to $enable")
+        oracleDriveLogger.d(TAG, "Requesting to toggle module with backend: $request")
+        showToast("Requesting to toggle module: $packageName to $enable") // Keep user feedback
 
-        // Get fresh ID token (this should be handled securely, e.g., via a ViewModel/Repository)
         auth.currentUser?.getIdToken(true)?.addOnSuccessListener { tokenResult ->
             tokenResult.token?.let { token ->
-                // The issue implies GenesisRepositoryNew.api directly, but typically you'd pass the token
-                // with the request, e.g., via an Authenticator or interceptor in Retrofit setup.
-                // For this implementation, we'll assume GenesisRepositoryNew handles token attachment
-                // or the API doesn't require bearer token for this specific endpoint based on server setup.
-                // If direct token usage is needed: GenesisRepositoryNew.setAuthToken(token) or pass to method.
-                // The server's get_current_user expects an Authorization header.
-                // For now, let's assume the Retrofit client used by GenesisRepositoryNew.api has an interceptor
-                // that adds this token. If not, this part needs adjustment.
-                // The issue's example for toggleLSPosedModule in MainActivity.kt doesn't show explicit token setting
-                // for the repository before the call, but mentions GenesisRepositoryNew.setAuthToken(token)
-                // as a possibility in a comment.
-
-                // Let's try to use the setAuthToken approach if available, otherwise, it assumes interceptor.
-                // Assuming GenesisRepositoryNew has a static method setAuthToken for simplicity here.
-                // This is a common pattern but might differ in the actual project.
+                oracleDriveLogger.i(TAG, "Successfully fetched Firebase ID token.")
                 try {
+                    // This reflection call is kept as per previous implementation, logged.
                     val method = GenesisRepositoryNew::class.java.getMethod("setAuthToken", String::class.java)
-                    method.invoke(null, token) // Call static method if it exists
-                     showToast("Auth token set for API call.")
+                    method.invoke(null, token)
+                    oracleDriveLogger.d(TAG, "Auth token set in GenesisRepositoryNew via reflection.")
                 } catch (e: NoSuchMethodException) {
-                    showToast("setAuthToken method not found in GenesisRepositoryNew. Assuming interceptor handles auth.")
+                    oracleDriveLogger.w(TAG, "setAuthToken method not found in GenesisRepositoryNew. Assuming interceptor handles auth.", e)
                 } catch (e: Exception) {
-                    showToast("Error setting auth token: ${e.message}")
+                    oracleDriveLogger.e(TAG, "Error setting auth token via reflection: ${e.message}", e)
                 }
-
 
                 GenesisRepositoryNew.api.toggleLSPosedModule(request)
                     .enqueue(object : Callback<LSPosedModuleResponse> {
                         override fun onResponse(call: Call<LSPosedModuleResponse>, response: Response<LSPosedModuleResponse>) {
-                            runOnUiThread { // Ensure UI updates are on the main thread
+                            runOnUiThread {
                                 if (response.isSuccessful && response.body() != null) {
                                     val resp = response.body()!!
+                                    oracleDriveLogger.i(TAG, "toggleLSPosedModule success: ${resp.status}, Pkg: ${resp.packageName}, Enabled: ${resp.enabled}")
                                     showToast("Module '${resp.packageName}' status: ${resp.status}, Enabled: ${resp.enabled}")
-                                    // Update UI based on actual response if needed
-                                    // If server confirms different state, update moduleToggleSwitch.isChecked = resp.enabled
                                     if (moduleToggleSwitch.isChecked != resp.enabled) {
-                                        // This might happen if the operation partially succeeded or server corrected the state
                                         moduleToggleSwitch.isChecked = resp.enabled
                                     }
                                 } else {
                                     val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                                    oracleDriveLogger.e(TAG, "toggleLSPosedModule failed: ${response.code()} - $errorBody")
                                     showToast("Failed to toggle module: ${response.code()} - $errorBody")
-                                    moduleToggleSwitch.isChecked = !enable // Revert on failure
+                                    moduleToggleSwitch.isChecked = !enable
                                 }
                             }
                         }
 
                         override fun onFailure(call: Call<LSPosedModuleResponse>, t: Throwable) {
-                            runOnUiThread { // Ensure UI updates are on the main thread
-                                showToast("Network error toggling module: ${t.message}")
-                                moduleToggleSwitch.isChecked = !enable // Revert on failure
+                            runOnUiThread {
+                                oracleDriveLogger.e(TAG, "toggleLSPosedModule network error: ${t.message}", t)
+                                showToast("Network error toggling module: ${t.message}") // Keep user feedback
+                                moduleToggleSwitch.isChecked = !enable
                             }
                         }
                     })
             } ?: runOnUiThread {
+                oracleDriveLogger.e(TAG, "Firebase ID token was null.")
                 showToast("Authentication token not available. Cannot toggle module.")
-                moduleToggleSwitch.isChecked = !enable // Revert toggle state
+                moduleToggleSwitch.isChecked = !enable
             }
         }?.addOnFailureListener { e ->
             runOnUiThread {
-                showToast("Failed to get auth token: ${e.message}")
-                moduleToggleSwitch.isChecked = !enable // Revert toggle state
+                oracleDriveLogger.e(TAG, "Failed to get Firebase ID token: ${e.message}", e)
+                showToast("Failed to get auth token: ${e.message}") // Keep user feedback
+                moduleToggleSwitch.isChecked = !enable
             }
         }
-        // Removed Thread { }.start() wrapper as getIdToken is async and enqueue handles its own threading.
     }
 
     private fun checkPermissionsAndExport() {
+        oracleDriveLogger.d(TAG, "checkPermissionsAndExport called.")
         if (hasStoragePermissions()) {
+            oracleDriveLogger.d(TAG, "Storage permissions already granted for export.")
             exportChatToFile()
         } else {
+            oracleDriveLogger.d(TAG, "Storage permissions not granted for export. Requesting.")
             requestStoragePermissions()
         }
     }
 
     private fun hasStoragePermissions(): Boolean {
-        return getRequiredPermissions().all { permission ->
+        val result = getRequiredPermissions().all { permission ->
             ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
         }
+        oracleDriveLogger.d(TAG, "hasStoragePermissions check result: $result")
+        return result
     }
 
     private fun requestStoragePermissions() {
@@ -344,69 +381,78 @@ class MainActivity : AppCompatActivity() {
         }.toTypedArray()
 
         if (permissionsToRequest.isNotEmpty()) {
+            oracleDriveLogger.i(TAG, "Requesting storage permissions: ${permissionsToRequest.joinToString()}")
             storagePermissionLauncher.launch(permissionsToRequest)
         } else {
-            // All permissions already granted
+            oracleDriveLogger.d(TAG, "No storage permissions to request, already granted (or filePicker fallback).")
             filePicker.launch(FILE_PICKER_MIME_TYPES[0])
         }
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray,
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == REQUEST_CODE_WRITE_STORAGE &&
-            grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
-            exportChatToFile()
-        } else {
-            Toast.makeText(
-                this,
-                "Storage permission is required to export chat",
-                Toast.LENGTH_SHORT
-            ).show()
+        oracleDriveLogger.d(TAG, "onRequestPermissionsResult: requestCode=$requestCode, permissions=${permissions.joinToString()}, results=${grantResults.joinToString()}")
+        if (requestCode == REQUEST_CODE_WRITE_STORAGE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                oracleDriveLogger.i(TAG, "WRITE_EXTERNAL_STORAGE permission granted via legacy onRequestPermissionsResult.")
+                exportChatToFile()
+            } else {
+                oracleDriveLogger.w(TAG, "WRITE_EXTERNAL_STORAGE permission denied via legacy onRequestPermissionsResult.")
+                Toast.makeText(this, "Storage permission is required to export chat", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun initializeService() {
+        oracleDriveLogger.i(TAG, "Initializing GenesisAIService...")
         try {
-            // Start the service when the activity is created
             GenesisAIService.startService(this)
+            oracleDriveLogger.i(TAG, "GenesisAIService.startService(this) called.")
         } catch (e: Exception) {
-            e.printStackTrace()
-            // Continue with the app even if service fails to start
+            oracleDriveLogger.e(TAG, "Error starting GenesisAIService: ${e.message}", e)
             Toast.makeText(this, "Background service could not start", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun checkStoragePermissionAndPickFile() {
+        oracleDriveLogger.d(TAG, "checkStoragePermissionAndPickFile called.")
         if (hasStoragePermissions()) {
+            oracleDriveLogger.d(TAG, "Storage permissions already granted for pick file.")
             filePicker.launch(FILE_PICKER_MIME_TYPES[0])
         } else {
+            oracleDriveLogger.d(TAG, "Storage permissions not granted for pick file. Requesting.")
             requestStoragePermissions()
         }
     }
 
     private fun openFileManager() {
+        oracleDriveLogger.d(TAG, "openFileManager called.")
         if (hasStoragePermissions()) {
+            oracleDriveLogger.i(TAG, "Storage permissions granted. Opening FileManagerActivity.")
             val intent = Intent(this, FileManagerActivity::class.java)
-            startActivity(intent)
+            try {
+                startActivity(intent)
+            } catch (e: Exception) {
+                oracleDriveLogger.e(TAG, "Could not open FileManagerActivity: ${e.message}", e)
+                showToast("Could not open File Manager: ${e.message}")
+            }
         } else {
+            oracleDriveLogger.w(TAG, "Storage permissions not granted. Requesting for FileManager.")
             requestStoragePermissions()
         }
     }
 
     private fun exportChatToFile() {
+        oracleDriveLogger.i(TAG, "exportChatToFile called.")
         try {
             val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val fileName = "GenComm_Chat_$timeStamp.txt"
-            val content = "=== GenComm Chat Export ===\n\n${chatLog.text}"
+            val content = "=== GenComm Chat Export ===
+
+${chatLog.text}"
+            oracleDriveLogger.d(TAG, "Exporting chat to file: $fileName")
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                // For Android 10+ use MediaStore
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                     put(MediaStore.MediaColumns.MIME_TYPE, "text/plain")
@@ -415,87 +461,71 @@ class MainActivity : AppCompatActivity() {
                         put(MediaStore.MediaColumns.IS_PENDING, 1)
                     }
                 }
+                val resolver = contentResolver
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
 
-                contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-                    ?.let { uri ->
-                        contentResolver.openOutputStream(uri)?.use { outputStream ->
-                            outputStream.write(content.toByteArray())
-                        }
-                        // Mark the file as available to other apps
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                            contentValues.clear()
-                            contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
-                            contentResolver.update(uri, contentValues, null, null)
-                        }
-
-                        Toast.makeText(
-                            this,
-                            "Chat exported to Documents folder: $fileName",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    } ?: throw Exception("Failed to create file")
+                uri?.let {
+                    resolver.openOutputStream(it)?.use { outputStream ->
+                        outputStream.write(content.toByteArray())
+                    }
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        contentValues.clear()
+                        contentValues.put(MediaStore.MediaColumns.IS_PENDING, 0)
+                        resolver.update(uri, contentValues, null, null)
+                    }
+                    oracleDriveLogger.i(TAG, "Chat exported successfully to Documents folder (Android Q+): $fileName, URI: $uri")
+                    Toast.makeText(this, "Chat exported to Documents folder: $fileName", Toast.LENGTH_LONG).show()
+                } ?: run {
+                    oracleDriveLogger.e(TAG, "MediaStore insert returned null URI for chat export.")
+                    throw Exception("Failed to create file via MediaStore")
+                }
             } else {
-                // For older versions, save to external storage
                 val downloadsDir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS) ?: filesDir
                 val file = File(downloadsDir, fileName)
                 file.writeText(content)
-
-                // Notify media scanner using MediaScannerConnection
-                MediaScannerConnection.scanFile(
-                    this,
-                    arrayOf(file.absolutePath),
-                    null
-                ) { _, _ ->
-                    // Media scan completed - parameters intentionally unused
-                }
-
-                Toast.makeText(
-                    this,
-                    "Chat exported to: ${file.absolutePath}",
-                    Toast.LENGTH_LONG
-                ).show()
+                MediaScannerConnection.scanFile(this, arrayOf(file.absolutePath), null, null)
+                oracleDriveLogger.i(TAG, "Chat exported successfully to: ${file.absolutePath} (pre-Android Q)")
+                Toast.makeText(this, "Chat exported to: ${file.absolutePath}", Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
-            Toast.makeText(
-                this,
-                "Export failed: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
-            e.printStackTrace()
+            oracleDriveLogger.e(TAG, "Chat export failed: ${e.message}", e)
+            Toast.makeText(this, "Export failed: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun sendMessage() {
         val message = messageInput.text.toString().trim()
+        oracleDriveLogger.d(TAG, "sendMessage called. Message empty: ${message.isEmpty()}")
         if (message.isEmpty()) return
 
-        updateChatLog("You", message) // Display user message immediately
+        updateChatLog("You", message)
 
         val request = MessageRequest(message)
+        oracleDriveLogger.i(TAG, "Sending message to API: '$message'")
         GenesisRepositoryNew.api.sendMessage(request)
             .enqueue(object : Callback<MessageResponse> {
-                override fun onResponse(
-                    call: Call<MessageResponse>,
-                    response: Response<MessageResponse>,
-                ) {
+                override fun onResponse(call: Call<MessageResponse>, response: Response<MessageResponse>) {
                     if (response.isSuccessful) {
                         val responseBody = response.body()
                         if (responseBody != null) {
-                            updateChatLog("AI", responseBody.message) // Pass "AI" as sender
+                            oracleDriveLogger.i(TAG, "API sendMessage success. AI Response: '${responseBody.message}'")
+                            updateChatLog("AI", responseBody.message)
                         } else {
+                            oracleDriveLogger.w(TAG, "API sendMessage success but empty response body.")
                             updateChatLog("Error", "Empty response from server")
                         }
                     } else {
-                         val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                        val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                        oracleDriveLogger.e(TAG, "API sendMessage failed: ${response.code()} - $errorBody")
                         updateChatLog("Error", "Failed to send message: ${response.code()} - $errorBody")
                     }
                 }
-
                 override fun onFailure(call: Call<MessageResponse>, t: Throwable) {
+                    oracleDriveLogger.e(TAG, "API sendMessage network error: ${t.message}", t)
                     updateChatLog("Error","Network Error: ${t.message}")
                 }
             })
-        messageInput.text.clear() // Clear input after sending
+        messageInput.text.clear()
     }
 
     // Modified to accept sender parameter
