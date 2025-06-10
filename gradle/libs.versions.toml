@@ -24,7 +24,7 @@ legacySupport = "1.0.0"
 multidex = "2.0.1"
 
 # Lifecycle
-lifecycle = "2.9.0"
+lifecycle = "2.9.1"
 
 # Navigation
 navigation = "2.9.0"
