@@ -3,17 +3,18 @@ plugins {
     id 'kotlin-android'
     id 'kotlin-parcelize'
     id 'com.google.devtools.ksp' version '1.9.0-1.0.11'
-    id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
-    // Using apply plugin approach for Firebase Performance to fix the error
+    // Comment out Firebase/Google plugins temporarily to allow build without google-services.json
+    // Uncomment these when the google-services.json file is available
+    // id 'com.google.gms.google-services'
+    // id 'com.google.firebase.crashlytics'
     // id 'com.google.firebase.perf'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
     id 'androidx.navigation.safeargs.kotlin'
     id 'com.google.android.gms.oss-licenses-plugin'
 }
 
-// Apply Firebase Performance plugin using the alternative syntax
-apply plugin: 'com.google.firebase.firebase-perf'
+// Temporarily commented out
+// apply plugin: 'com.google.firebase.firebase-perf'
 
 android {
     namespace 'com.genesis.ai.app'
