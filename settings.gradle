@@ -1,3 +1,4 @@
+@Suppress("UnstableApiUsage") // Suppress warning for libs access
 // Plugin management must be the first block
 pluginManagement {
     repositories {
@@ -5,19 +6,32 @@ pluginManagement {
         google()
         mavenCentral()
     }
+    plugins {
+        id("com.android.application").version(libs.versions.agp.get())
+        id("org.jetbrains.kotlin.android").version(libs.versions.kotlin.get())
+        id("org.jetbrains.kotlin.plugin.parcelize").version(libs.versions.kotlin.get())
+        id("com.google.devtools.ksp").version(libs.versions.ksp.get()) // Uses plugin alias 'ksp' from [plugins] table
+        id("com.google.gms.google-services").version(libs.versions.google.services.get()) // Uses plugin alias 'google-services' from [plugins]
+        id("com.google.firebase.crashlytics").version(libs.versions.firebase.crashlytics.get()) // Uses plugin alias 'firebase-crashlytics'
+        id("com.google.firebase.perf").version(libs.versions.firebase.perf.get()) // Uses plugin alias 'firebase-perf'
+        id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin").version(libs.versions.secretsGradlePlugin.get())
+        id("androidx.navigation.safeargs.kotlin").version(libs.versions.safeargs.get()) // Uses plugin alias 'safeargs'
+        id("com.google.android.gms.oss-licenses-plugin").version(libs.versions.oss.licenses.get()) // Uses plugin alias 'oss-licenses'
+    }
 }
 
 // Define the root project name
-rootProject.name = 'GenesisAndroidApp'
+rootProject.name = "GenesisAndroidApp"
 
 // Configure dependency resolution
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    
+
     repositories {
         google()
         mavenCentral()
+        // Potentially add other repositories if needed for specific dependencies, e.g., jitpack.io
     }
 }
 
-include ':app' mm
+include(":app")
