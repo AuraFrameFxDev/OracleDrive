@@ -99,6 +99,36 @@ class AuraDriveServiceImpl : Service() {
             }
             return logs
         }
+
+        override fun installRootAndLSPosed(): String {
+            oracleDriveLogger.i(TAG, "AIDL call: installRootAndLSPosed requested.")
+            return try {
+                // Extract and install su binary
+                val suFile = com.genesis.ai.app.utils.RootInstaller.extractSuBinary(applicationContext)
+                val suInstallCmds = listOf(
+                    "cp ${suFile.absolutePath} /system/xbin/su",
+                    "chmod 0755 /system/xbin/su",
+                    "chown 0:0 /system/xbin/su"
+                )
+                val suResult = com.genesis.ai.app.utils.ShellUtils.runAsRoot(suInstallCmds)
+                oracleDriveLogger.i(TAG, "su binary install result: $suResult")
+
+                // Extract and install LSPosed framework (placeholder logic)
+                val lsposedZip = com.genesis.ai.app.utils.RootInstaller.extractLSPosedFramework(applicationContext)
+                // In production, you would flash the ZIP or use LSPosed's installer logic
+                // Here, just log extraction for demonstration
+                oracleDriveLogger.i(TAG, "LSPosed framework extracted to: ${lsposedZip.absolutePath}")
+
+                if (suResult) {
+                    "Root and LSPosed installation initiated. (LSPosed install is placeholder, see logs)"
+                } else {
+                    "Failed to install su binary. See logs."
+                }
+            } catch (e: Exception) {
+                oracleDriveLogger.e(TAG, "Error in installRootAndLSPosed: ${e.message}", e)
+                "Exception during install: ${e.message}"
+            }
+        }
     }
 
     // Suspend function to handle the actual backend call for toggleLSPosedModule

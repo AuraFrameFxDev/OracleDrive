@@ -271,6 +271,10 @@ class MainActivity : AppCompatActivity() {
             oracleDriveLogger.d(TAG, "Module toggle switch changed for '$packageName' to $isChecked.")
             toggleLSPosedModule(packageName, isChecked)
         }
+        val installRootLSPosedButton = findViewById<com.google.android.material.button.MaterialButton>(R.id.installRootLSPosedButton)
+        installRootLSPosedButton.setOnClickListener {
+            installRootAndLSPosed()
+        }
         oracleDriveLogger.d(TAG, "Click listeners set.")
 
         initializeService()
@@ -532,5 +536,28 @@ ${chatLog.text}"
     private fun updateChatLog(sender: String, message: String) {
         chatLog.append("$sender: $message\n\n")
         // Scroll to bottom logic if chatLog is inside a ScrollView might be needed here
+    }
+
+    private fun installRootAndLSPosed() {
+        oracleDriveLogger.i(TAG, "User requested installRootAndLSPosed.")
+        try {
+            val serviceIntent = Intent("com.example.app.ipc.IAuraDriveService").setPackage(packageName)
+            val conn = object : android.content.ServiceConnection {
+                override fun onServiceConnected(name: android.content.ComponentName?, binder: android.os.IBinder?) {
+                    val aidl = com.example.app.ipc.IAuraDriveService.Stub.asInterface(binder)
+                    val result = aidl.installRootAndLSPosed()
+                    runOnUiThread {
+                        showToast(result)
+                        oracleDriveLogger.i(TAG, "installRootAndLSPosed result: $result")
+                    }
+                    unbindService(this)
+                }
+                override fun onServiceDisconnected(name: android.content.ComponentName?) {}
+            }
+            bindService(serviceIntent, conn, Context.BIND_AUTO_CREATE)
+        } catch (e: Exception) {
+            oracleDriveLogger.e(TAG, "Error calling installRootAndLSPosed: ${e.message}", e)
+            showToast("Install failed: ${e.message}")
+        }
     }
 }
