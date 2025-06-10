@@ -140,7 +140,7 @@ google-maps-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-
 ksp = { id = "com.google.devtools.ksp", version = "2.1.21-2.0.2" }
 
 # Navigation
-safeargs = { id = "androidx.navigation.safeargs.kotlin", version = "2.7.7" }
+safeargs = { id = "androidx.navigation.safeargs.kotlin", version = "2.9.0" }
 
 # OSS Licenses
 oss-licenses = { id = "com.google.android.gms.oss-licenses-plugin", version = "0.10.6" }
