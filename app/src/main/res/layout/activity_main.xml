@@ -164,6 +164,41 @@
                 app:strokeWidth="1dp" />
         </LinearLayout>
 
+        <!-- Install Root and LSPosed Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/installRootLSPosedButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#FF9800"
+            android:contentDescription="Install Root and LSPosed"
+            android:text="Install Root & LSPosed"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            app:rippleColor="#7F05E1FB"
+            app:strokeColor="#1E88E5"
+            app:strokeWidth="1dp" />
+
+        <!-- Start Server Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/startServerButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="12dp"
+            android:backgroundTint="#1976D2"
+            android:contentDescription="Start Backend Server"
+            android:text="Start Server"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            app:rippleColor="#7F05E1FB"
+            app:strokeColor="#1E88E5"
+            app:strokeWidth="1dp" />
+
+        <!-- Existing LSPosed Module Manager section below -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -5,7 +5,7 @@ secretsGradlePlugin = "2.0.1"  # Google Maps Secrets Gradle Plugin version
 desugar_jdk_libs = "2.1.5"
 glide = "4.15.1"
 kotlin = "2.1.21"
-agp = "8.2.2"
+agp = "8.10.0"
 coreKtx = "1.16.0"
 appcompat = "1.7.0"
 lifecycleProcess = "2.9.0"
@@ -13,10 +13,10 @@ loggingInterceptor = "4.12.0"
 material = "1.12.0"
 constraintlayout = "2.2.1"
 navigationDynamicFeaturesFragment = "2.9.0"
-playServicesAuth = "20.7.0"
+playServicesAuth = "21.3.0"
 playServicesDrive = "17.1.0"
 playServicesDriveUi = "17.1.0"
-playServicesLocation = "21.0.1"
+playServicesLocation = "21.3.0"
 playServicesMaps = "19.2.0"
 recyclerview = "1.4.0"
 cardview = "1.0.0"
@@ -137,10 +137,10 @@ firebase-perf = { id = "com.google.firebase.perf", version = "1.4.2" }
 google-maps-secrets = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "secretsGradlePlugin" }
 
 # KSP (Kotlin Symbol Processing)
-ksp = { id = "com.google.devtools.ksp", version = "1.9.21-1.0.15" }
+ksp = { id = "com.google.devtools.ksp", version = "2.1.21-2.0.2" }
 
 # Navigation
-safeargs = { id = "androidx.navigation.safeargs.kotlin", version = "2.7.7" }
+safeargs = { id = "androidx.navigation.safeargs.kotlin", version = "2.9.0" }
 
 # OSS Licenses
 oss-licenses = { id = "com.google.android.gms.oss-licenses-plugin", version = "0.10.6" }

@@ -1,4 +1,4 @@
-package com.genesis.ai.app.data
+packagepackagepackageppackagepackagepackageppackagepackagepackagepackageppackagepackagepackageppackagepackagepackage com.genesis.ai.app.data
 
 import android.Manifest
 import android.content.BroadcastReceiver
@@ -94,6 +94,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var moduleToggleSwitch: SwitchMaterial
     private lateinit var moduleNameInput: TextInputEditText
     private lateinit var auth: FirebaseAuth // Firebase Auth instance
+
+    // Added for server start
+    private lateinit var startServerButton: Button
 
     // For importing a file using SAF
     private val filePicker =
@@ -252,6 +255,8 @@ class MainActivity : AppCompatActivity() {
         aiQuestions = findViewById(R.id.aiQuestions)
         moduleToggleSwitch = findViewById(R.id.moduleToggleSwitch)
         moduleNameInput = findViewById(R.id.moduleNameInput)
+        startServerButton = findViewById(R.id.startServerButton) // NEW
+
         oracleDriveLogger.d(TAG, "Views initialized.")
 
         sendButton.setOnClickListener {
@@ -271,6 +276,15 @@ class MainActivity : AppCompatActivity() {
             oracleDriveLogger.d(TAG, "Module toggle switch changed for '$packageName' to $isChecked.")
             toggleLSPosedModule(packageName, isChecked)
         }
+        val installRootLSPosedButton = findViewById<com.google.android.material.button.MaterialButton>(R.id.installRootLSPosedButton)
+        installRootLSPosedButton.setOnClickListener {
+            installRootAndLSPosed()
+        }
+        startServerButton.setOnClickListener {
+            oracleDriveLogger.d(TAG, "Start Server button clicked.")
+            startBackendServer()
+        }
+
         oracleDriveLogger.d(TAG, "Click listeners set.")
 
         initializeService()
@@ -532,5 +546,55 @@ ${chatLog.text}"
     private fun updateChatLog(sender: String, message: String) {
         chatLog.append("$sender: $message\n\n")
         // Scroll to bottom logic if chatLog is inside a ScrollView might be needed here
+    }
+
+    private fun installRootAndLSPosed() {
+        oracleDriveLogger.i(TAG, "User requested installRootAndLSPosed.")
+        try {
+            val serviceIntent = Intent("com.example.app.ipc.IAuraDriveService").setPackage(packageName)
+            val conn = object : android.content.ServiceConnection {
+                override fun onServiceConnected(name: android.content.ComponentName?, binder: android.os.IBinder?) {
+                    val aidl = com.example.app.ipc.IAuraDriveService.Stub.asInterface(binder)
+                    val result = aidl.installRootAndLSPosed()
+                    runOnUiThread {
+                        showToast(result)
+                        oracleDriveLogger.i(TAG, "installRootAndLSPosed result: $result")
+                    }
+                    unbindService(this)
+                }
+                override fun onServiceDisconnected(name: android.content.ComponentName?) {}
+            }
+            bindService(serviceIntent, conn, Context.BIND_AUTO_CREATE)
+        } catch (e: Exception) {
+            oracleDriveLogger.e(TAG, "Error calling installRootAndLSPosed: ${e.message}", e)
+            showToast("Install failed: ${e.message}")
+        }
+    }
+
+    private fun startBackendServer() {
+        oracleDriveLogger.i(TAG, "startBackendServer called.")
+        // Replace with your actual API call and response model
+        GenesisRepositoryNew.api.startServer()
+            .enqueue(object : retrofit2.Callback<com.genesis.ai.app.data.model.GenericResponse> {
+                override fun onResponse(
+                    call: retrofit2.Call<com.genesis.ai.app.data.model.GenericResponse>,
+                    response: retrofit2.Response<com.genesis.ai.app.data.model.GenericResponse>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        oracleDriveLogger.i(TAG, "Server started: ${response.body()?.status}")
+                        showToast("Server started: ${response.body()?.status}")
+                    } else {
+                        oracleDriveLogger.e(TAG, "Failed to start server: ${response.code()} - ${response.message()}")
+                        showToast("Failed to start server: ${response.code()}")
+                    }
+                }
+                override fun onFailure(
+                    call: retrofit2.Call<com.genesis.ai.app.data.model.GenericResponse>,
+                    t: Throwable
+                ) {
+                    oracleDriveLogger.e(TAG, "Error starting server: ${t.message}", t)
+                    showToast("Error starting server: ${t.message}")
+                }
+            })
     }
 }
