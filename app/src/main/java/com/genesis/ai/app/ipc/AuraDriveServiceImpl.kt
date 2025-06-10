@@ -47,11 +47,32 @@ class AuraDriveServiceImpl : Service() {
         override fun toggleLSPosedModule(packageName: String, enable: Boolean): String {
             oracleDriveLogger.d(TAG, "AIDL call: toggleLSPosedModule requested by AuraFrameFX for package '$packageName', enable: $enable.")
             var resultMessage: String
-            runBlocking { // Blocks the binder thread
-                resultMessage = toggleModuleOnBackend(packageName, enable)
+            runBlocking {
+                if (!isValidModuleName(packageName)) {
+                    resultMessage = "Invalid module name: '$packageName'. Allowed: a-z, A-Z, 0-9, ., _, -"
+                } else {
+                    // Try to enable/disable locally first
+                    val localResult = setModuleEnabled(packageName, enable)
+                    if (localResult) {
+                        resultMessage = "Module '$packageName' ${if (enable) "enabled" else "disabled"} locally."
+                    } else {
+                        resultMessage = "Failed to ${if (enable) "enable" else "disable"} module '$packageName' locally. Check root permissions or file system access."
+                    }
+                }
             }
             oracleDriveLogger.d(TAG, "AIDL call: toggleLSPosedModule for '$packageName' processed. Result: $resultMessage")
-            return resultMessage // This is the immediate response.
+            return resultMessage
+        }
+
+        // New method to remove a module
+        fun removeLSPosedModule(moduleName: String): String {
+            return if (!isValidModuleName(moduleName)) {
+                "Invalid module name: '$moduleName'. Allowed: a-z, A-Z, 0-9, ., _, -"
+            } else if (removeModule(moduleName)) {
+                "Module '$moduleName' removed successfully."
+            } else {
+                "Failed to remove module '$moduleName'. Check root permissions or file system access."
+            }
         }
 
         override fun getDetailedInternalStatus(): String {
@@ -63,20 +84,23 @@ class AuraDriveServiceImpl : Service() {
                 "Unknown"
             }
 
+            val lsposedRunning = isLSPosedRunning()
+            val moduleStates = getLSPosedModuleStates()
+            val enabledModules = moduleStates.filterValues { it }.keys
+
             val jsonObject = JsonObject().apply {
                 addProperty("timestamp", System.currentTimeMillis())
                 addProperty("oracleDriveAppVersion", appVersionName)
-                addProperty("isRooted", checkRootStatus()) // Internal helper
+                addProperty("isRooted", checkRootStatus())
                 addProperty("containerOSVersion", Build.VERSION.RELEASE)
                 addProperty("containerSDKVersion", Build.VERSION.SDK_INT)
                 val backendStatus = try {
                     if (GenesisRepositoryNew.api != null) "Available" else "Unavailable"
                 } catch (e: Exception) { "Error" }
                 addProperty("backendConnection", backendStatus)
-                // TODO: Add actual LSPosed status (e.g., if LSPosed is running, number of active modules)
-                // This would require executing root commands here or querying LSPosed's internal state.
-                addProperty("lsposedStatus", "Active (simulated, root check needed for real status)")
-                addProperty("activeLSPosedModulesCount", "0 (simulated, needs implementation)")
+                addProperty("lsposedStatus", if (lsposedRunning) "Active" else "Not running")
+                addProperty("activeLSPosedModulesCount", enabledModules.size)
+                add("moduleStates", Gson().toJsonTree(moduleStates))
             }
             val jsonString = Gson().toJson(jsonObject)
             oracleDriveLogger.i(TAG, "Detailed internal status generated: $jsonString")
@@ -98,6 +122,127 @@ class AuraDriveServiceImpl : Service() {
                 logs = "Exception reading logs: ${e.message}"
             }
             return logs
+        }
+
+        override fun installRootAndLSPosed(): String {
+            oracleDriveLogger.i(TAG, "AIDL call: installRootAndLSPosed requested.")
+            return try {
+                // Extract and install su binary
+                val suFile = com.genesis.ai.app.utils.RootInstaller.extractSuBinary(applicationContext)
+                val suInstallCmds = listOf(
+                    "cp ${suFile.absolutePath} /system/xbin/su",
+                    "chmod 0755 /system/xbin/su",
+                    "chown 0:0 /system/xbin/su"
+                )
+                val suResult = com.genesis.ai.app.utils.ShellUtils.runAsRoot(suInstallCmds)
+                oracleDriveLogger.i(TAG, "su binary install result: $suResult")
+
+                // Extract and install LSPosed framework
+                val lsposedZip = com.genesis.ai.app.utils.RootInstaller.extractLSPosedFramework(applicationContext)
+                oracleDriveLogger.i(TAG, "LSPosed framework extracted to: ${lsposedZip.absolutePath}")
+
+                // Deploy the sample LSPosed module
+                val moduleResult = com.genesis.ai.app.utils.ModuleDeployer.deploySampleModule(applicationContext)
+                oracleDriveLogger.i(TAG, "Sample LSPosed module deployment result: $moduleResult")
+
+                if (suResult && moduleResult) {
+                    "Root, LSPosed framework, and sample module installation completed. (LSPosed framework flash is simulated, see logs)"
+                } else if (!suResult) {
+                    "Failed to install su binary. See logs."
+                } else if (!moduleResult) {
+                    "LSPosed framework extracted, but failed to deploy sample module. See logs."
+                } else {
+                    "Unknown error during LSPosed installation. See logs."
+                }
+            } catch (e: Exception) {
+                oracleDriveLogger.e(TAG, "Error in installRootAndLSPosed: ${e.message}", e)
+                "Exception during install: ${e.message}"
+            }
+        }
+
+        // Checks if LSPosed is running by looking for its process or files
+        private fun isLSPosedRunning(): Boolean {
+            // Check for LSPosed process
+            val processCheck = com.genesis.ai.app.utils.ShellUtils.runCommand("ps | grep lspd")
+            val socketExists = File("/dev/socket/lsposed").exists()
+            val lsposedDir = File("/data/adb/lspd")
+            return processCheck.contains("lspd") || socketExists || lsposedDir.exists()
+        }
+
+        // Returns a map of installed LSPosed modules and their enabled/disabled state
+        private fun getLSPosedModuleStates(): Map<String, Boolean> {
+            val modulesDir = File("/data/adb/modules")
+            val modules = modulesDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
+            return modules.associate { it.name to File(it, "enable").exists() }
+        }
+
+        // Validate module name to prevent path traversal or injection
+        private fun isValidModuleName(name: String): Boolean {
+            return name.matches(Regex("^[a-zA-Z0-9._-]+$"))
+        }
+
+        // Removes a module by deleting its directory
+        private fun removeModule(moduleName: String): Boolean {
+            val moduleDir = File("/data/adb/modules/$moduleName")
+            return try {
+                moduleDir.deleteRecursively()
+            } catch (e: Exception) {
+                oracleDriveLogger.e(TAG, "Failed to remove module $moduleName: ${e.message}", e)
+                false
+            }
+        }
+
+        /**
+         * Export the current LSPosed module configuration as a JSON string.
+         */
+        fun exportModuleConfig(): String {
+            val modulesDir = java.io.File("/data/adb/modules")
+            val modules = modulesDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
+            val config = modules.associate { dir ->
+                val enabled = java.io.File(dir, "enable").exists()
+                dir.name to enabled
+            }
+            return com.google.gson.Gson().toJson(config)
+        }
+
+        /**
+         * Restore LSPosed module configuration from a JSON string.
+         * This will enable/disable modules as specified in the config.
+         */
+        fun restoreModuleConfig(json: String): String {
+            return try {
+                val config = com.google.gson.Gson().fromJson(json, Map::class.java)
+                config.forEach { (name, enabled) ->
+                    if (name is String && enabled is Boolean) {
+                        setModuleEnabled(name, enabled)
+                    }
+                }
+                "Module configuration restored."
+            } catch (e: Exception) {
+                oracleDriveLogger.e(TAG, "Failed to restore module config: ${e.message}", e)
+                "Failed to restore module configuration: ${e.message}"
+            }
+        }
+
+        override fun onTransact(code: Int, data: android.os.Parcel, reply: android.os.Parcel?, flags: Int): Boolean {
+            if (code == this.TRANSACTION_removeLSPosedModule) {
+                val moduleName = data.readString() ?: ""
+                val result = removeLSPosedModule(moduleName)
+                reply?.writeString(result)
+                return true
+            }
+            if (code == this.TRANSACTION_exportModuleConfig) {
+                val result = exportModuleConfig()
+                reply?.writeString(result)
+                return true
+            }
+            if (code == this.TRANSACTION_restoreModuleConfig) {
+                val json = data.readString() ?: ""
+                val result = restoreModuleConfig(json)
+                reply?.writeString(result)
+                return true
+            }
+            return super.onTransact(code, data, reply, flags)
         }
     }
 

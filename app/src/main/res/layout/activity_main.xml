@@ -164,6 +164,23 @@
                 app:strokeWidth="1dp" />
         </LinearLayout>
 
+        <!-- Install Root and LSPosed Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/installRootLSPosedButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:backgroundTint="#FF9800"
+            android:contentDescription="Install Root and LSPosed"
+            android:text="Install Root & LSPosed"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            app:rippleColor="#7F05E1FB"
+            app:strokeColor="#1E88E5"
+            app:strokeWidth="1dp" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -213,5 +230,16 @@
                 app:trackTintMode="src_over" />
 
         </LinearLayout>
+
+        <!-- Bottom Navigation -->
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:background="@color/black"
+            app:itemIconTint="@color/white"
+            app:itemTextColor="@color/white"
+            app:menu="@menu/bottom_nav_menu" />
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

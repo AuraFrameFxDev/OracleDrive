@@ -82,6 +82,27 @@
             android:exported="false"
             android:theme="@style/Theme.GenesisAndroidApp" />
 
+        <activity
+            android:name=".ui.HaloViewActivity"
+            android:theme="@style/AppTheme"
+            android:windowAnimationStyle="@style/DisperseMaterialization" />
+        <activity
+            android:name=".ui.FileManagerActivity"
+            android:theme="@style/AppTheme"
+            android:windowAnimationStyle="@style/DisperseMaterialization" />
+        <activity
+            android:name=".ui.FilePickerActivity"
+            android:theme="@style/AppTheme"
+            android:windowAnimationStyle="@style/DisperseMaterialization" />
+        <activity
+            android:name=".ui.HelpActivity"
+            android:theme="@style/AppTheme"
+            android:windowAnimationStyle="@style/DisperseMaterialization" />
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:theme="@style/AppTheme"
+            android:windowAnimationStyle="@style/DisperseMaterialization" />
+
         <service
             android:name=".service.GenesisAIService"
             android:enabled="true"
