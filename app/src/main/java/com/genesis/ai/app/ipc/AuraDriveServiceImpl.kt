@@ -83,6 +83,11 @@ class AuraDriveServiceImpl : Service() {
             return jsonString
         }
 
+        /**
+         * Retrieves the current day's internal diagnostics log as a string.
+         *
+         * Returns the log contents if available, or an error message if log retrieval fails.
+         */
         override fun getInternalDiagnosticsLog(): String {
             oracleDriveLogger.d(TAG, "AIDL call: getInternalDiagnosticsLog requested.")
             var logs = "Error reading logs." // Default error message
@@ -100,6 +105,15 @@ class AuraDriveServiceImpl : Service() {
             return logs
         }
 
+        /**
+         * Attempts to install a root `su` binary and extract the LSPosed framework on the device.
+         *
+         * Installs the `su` binary to `/system/xbin/su` with appropriate permissions using root commands,
+         * and extracts the LSPosed framework ZIP file (actual LSPosed installation is not performed).
+         * Returns a status message indicating success, failure, or any exception encountered.
+         *
+         * @return A message describing the result of the installation attempt.
+         */
         override fun installRootAndLSPosed(): String {
             oracleDriveLogger.i(TAG, "AIDL call: installRootAndLSPosed requested.")
             return try {

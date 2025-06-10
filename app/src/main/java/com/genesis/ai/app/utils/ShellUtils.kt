@@ -5,9 +5,12 @@ import java.io.InputStreamReader
 
 object ShellUtils {
     /**
-     * Runs a list of shell commands as root (su)
-     * @param commands List of commands to run
-     * @return true if all commands succeed
+     * Executes a list of shell commands with root privileges.
+     *
+     * Attempts to run each command in the provided list using the `su` binary. Returns `true` if all commands execute successfully (exit code 0), or `false` if an error occurs or root access is denied.
+     *
+     * @param commands The shell commands to execute as root.
+     * @return `true` if all commands complete successfully; `false` otherwise.
      */
     fun runAsRoot(commands: List<String>): Boolean {
         try {
@@ -31,7 +34,10 @@ object ShellUtils {
     }
 
     /**
-     * Runs a single shell command and returns output
+     * Executes a shell command without root privileges and returns its standard output.
+     *
+     * @param command The shell command to execute.
+     * @return The standard output produced by the command, or an empty string if an error occurs.
      */
     fun runCommand(command: String): String {
         return try {

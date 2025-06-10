@@ -231,6 +231,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Initializes the activity, sets up UI components, event listeners, authentication, and starts required services.
+     *
+     * This method configures the main user interface, initializes Firebase authentication, assigns click listeners to UI elements for chat, file management, module toggling, and root/LSPosed installation, and starts the background AI service.
+     *
+     * @param savedInstanceState The previously saved instance state, if any.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Initialize logger first
@@ -532,12 +539,24 @@ ${chatLog.text}"
         messageInput.text.clear()
     }
 
-    // Modified to accept sender parameter
+    /**
+     * Appends a formatted message from the specified sender to the chat log display.
+     *
+     * @param sender The name or identifier of the message sender.
+     * @param message The message content to append.
+     */
     private fun updateChatLog(sender: String, message: String) {
         chatLog.append("$sender: $message\n\n")
         // Scroll to bottom logic if chatLog is inside a ScrollView might be needed here
     }
 
+    /**
+     * Initiates installation of root and LSPosed components by binding to a remote service via IPC.
+     *
+     * Connects to the `IAuraDriveService` AIDL service and invokes its `installRootAndLSPosed()` method.
+     * Displays the result to the user via a toast and logs the outcome. If the service call fails or an exception occurs,
+     * an error message is shown to the user and logged.
+     */
     private fun installRootAndLSPosed() {
         oracleDriveLogger.i(TAG, "User requested installRootAndLSPosed.")
         try {

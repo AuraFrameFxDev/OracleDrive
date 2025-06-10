@@ -6,12 +6,14 @@ import java.io.FileOutputStream
 
 object AssetExtractor {
     /**
-     * Extracts an asset file to the app's filesDir or cacheDir
-     * @param context Context
-     * @param assetPath Path inside assets (e.g. "binaries/su-arm64-v8a")
-     * @param outputFileName Name for the output file
-     * @param useCacheDir If true, use cacheDir, else filesDir
-     * @return File pointing to the extracted file
+     * Extracts a file from the app's assets folder and writes it to internal storage.
+     *
+     * Copies the specified asset to either the app's files directory or cache directory, returning a File object referencing the extracted file.
+     *
+     * @param assetPath Relative path of the asset within the assets folder.
+     * @param outputFileName Name to assign to the extracted file.
+     * @param useCacheDir If true, the file is written to the cache directory; otherwise, to the files directory.
+     * @return A File referencing the extracted asset in internal storage.
      */
     fun extractAsset(context: Context, assetPath: String, outputFileName: String, useCacheDir: Boolean = false): File {
         val dir = if (useCacheDir) context.cacheDir else context.filesDir
