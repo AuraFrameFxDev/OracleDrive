@@ -1,23 +1,26 @@
-// Plugin management must be the first block
 pluginManagement {
     repositories {
         gradlePluginPortal()
         google()
         mavenCentral()
     }
+    resolutionStrategy {
+        eachPlugin {
+            if (requested.id.id == 'com.android.application') {
+                useModule('com.android.tools.build:gradle:8.1.0')
+            }
+        }
+    }
 }
 
-// Define the root project name
-rootProject.name = 'GenesisAndroidApp'
-
-// Configure dependency resolution
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    
     repositories {
         google()
         mavenCentral()
     }
 }
+
+rootProject.name = 'GenesisAndroidApp'
 
 include ':app'

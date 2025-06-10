@@ -1,24 +1,19 @@
 plugins {
-    // Android and Kotlin
     id 'com.android.application'
-    id 'org.jetbrains.kotlin.android'
-    id 'org.jetbrains.kotlin.plugin.parcelize'
-    id 'com.google.devtools.ksp'
-
-    // Google Services and Firebase
+    id 'kotlin-android'
+    id 'kotlin-parcelize'
+    id 'com.google.devtools.ksp' version '1.9.0-1.0.11'
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
-    id 'com.google.firebase.perf'
-
-    // Google Maps Secrets
+    // Using apply plugin approach for Firebase Performance to fix the error
+    // id 'com.google.firebase.perf'
     id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
-
-    // Navigation Safe Args
     id 'androidx.navigation.safeargs.kotlin'
-
-    // OSS Licenses
     id 'com.google.android.gms.oss-licenses-plugin'
 }
+
+// Apply Firebase Performance plugin using the alternative syntax
+apply plugin: 'com.google.firebase.firebase-perf'
 
 android {
     namespace 'com.genesis.ai.app'
@@ -35,172 +30,119 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testApplicationId "com.genesis.ai.app.test"
-
+        
         // Enable vector drawables
         vectorDrawables.useSupportLibrary = true
-
+        
         // Enable multidex
         multiDexEnabled true
     }
 
     buildTypes {
-        debug {
-            applicationIdSuffix ".debug"
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            debuggable true
-        }
         release {
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
     compileOptions {
-        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+        
+        // Enable Java 8+ API desugaring
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
         jvmTarget = '17'
-        freeCompilerArgs += [
-                '-Xjvm-default=all',
-                '-opt-in=kotlin.RequiresOptIn'
-        ]
-    }
-
-    packagingOptions {
-        jniLibs {
-            useLegacyPackaging = true
-        }
-        resources {
-            pickFirsts += [
-                    'META-INF/AL2.0',
-                    'META-INF/LGPL2.1'
-            ]
-            excludes += [
-                    'META-INF/DEPENDENCIES',
-                    'META-INF/LICENSE',
-                    'META-INF/LICENSE.txt',
-                    'META-INF/license.txt',
-                    'META-INF/NOTICE',
-                    'META-INF/NOTICE.txt',
-                    'META-INF/notice.txt',
-                    'META-INF/ASL2.0',
-                    'META-INF/AL2.0',
-                    'META-INF/LGPL2.1',
-                    'META-INF/*.kotlin_module'
-            ]
-        }
+        freeCompilerArgs += ['-opt-in=kotlin.RequiresOptIn']
     }
 
     buildFeatures {
-        viewBinding true
-        buildConfig true
         compose true
+        viewBinding true
+        dataBinding true
     }
 
-    // Configure KSP
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-        arg("room.incremental", "true")
-        arg("room.generateKotlin", "true")
-        arg("room.compiler.incremental", "true")
-    }
-
-    configurations.all {
-        resolutionStrategy {
-            // Force specific versions if needed
-            // force 'androidx.core:core-ktx:1.16.0'
-            // force 'androidx.appcompat:appcompat:1.7.0'
-
-            // Enable dependency verification (optional)
-            // failOnVersionConflict()
+    packagingOptions {
+        resources {
+            excludes += [
+                'META-INF/DEPENDENCIES',
+                'META-INF/LICENSE',
+                'META-INF/LICENSE.txt',
+                'META-INF/NOTICE',
+                'META-INF/NOTICE.txt',
+                'META-INF/AL2.0',
+                'META-INF/LGPL2.1'
+            ]
         }
-    }
-    resolutionStrategy {
-        // Force specific versions if needed
-        // force 'androidx.core:core-ktx:1.16.0'
-        // force 'androidx.appcompat:appcompat:1.7.0'
-
-        // Enable dependency verification (optional)
-        // failOnVersionConflict()
     }
 }
 
 dependencies {
-    // Kotlin
-    implementation libs.kotlin.stdlib
-    implementation libs.coroutines.android
-    implementation libs.coroutines.play.services
-
-    // Firebase BOM (Bill of Materials) - Single BOM import for all Firebase dependencies
-    implementation platform(libs.firebase.bom)
-
     // Firebase dependencies (using BOM)
-    implementation libs.firebase.analytics.ktx
-    implementation libs.firebase.crashlytics.ktx
-    implementation libs.firebase.perf.ktx
-    implementation libs.firebase.auth.ktx
-    implementation libs.firebase.firestore.ktx
-    implementation libs.firebase.messaging.ktx
-    implementation libs.firebase.storage
-    implementation libs.firebase.database
-
+    implementation platform('com.google.firebase:firebase-bom:32.7.0')
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-perf-ktx'
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation 'com.google.firebase:firebase-messaging-ktx'
+    implementation 'com.google.firebase:firebase-storage'
+    implementation 'com.google.firebase:firebase-database'
+    
     // Google Play Services
-    implementation libs.play.services.auth
-    implementation libs.play.services.location
-    implementation libs.play.services.maps
-    implementation libs.play.services.drive
-    implementation libs.play.services.drive.ui
-
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+    implementation 'com.google.android.gms:play-services-maps:18.2.0'
+    implementation 'com.google.android.gms:play-services-drive:17.0.0'
+    
     // Navigation
-    implementation libs.navigation.fragment
-    implementation libs.navigation.ui
-    implementation libs.navigation.dynamic.features.fragment
-
+    implementation 'androidx.navigation:navigation-fragment-ktx:2.7.5'
+    implementation 'androidx.navigation:navigation-ui-ktx:2.7.5'
+    implementation 'androidx.navigation:navigation-dynamic-features-fragment:2.7.5'
+    
     // Core AndroidX
-    implementation libs.core.ktx
-    implementation libs.appcompat
-    implementation libs.material
-
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.10.0'
+    
     // AndroidX UI
-    implementation libs.constraintlayout
-    implementation libs.recyclerview
-    implementation libs.cardview
-    implementation libs.legacy.support
-    implementation libs.multidex
-
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
+    
     // Lifecycle components
-    implementation libs.lifecycle.viewmodel
-    implementation libs.lifecycle.livedata
-    implementation libs.lifecycle.runtime
-    implementation libs.lifecycle.common
-    implementation libs.lifecycle.process
-
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-common-java8:2.6.2'
+    implementation 'androidx.lifecycle:lifecycle-process:2.6.2'
+    
     // Desugaring for Java 8+ APIs
-    coreLibraryDesugaring libs.desugar.jdk.libs
-
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
+    
     // Retrofit & Network
-    implementation libs.retrofit
-    implementation libs.retrofit.converter.gson
-    implementation libs.okhttp
-    implementation libs.logging.interceptor.v4120
-
-    // Testing
-    testImplementation libs.junit
-    androidTestImplementation libs.ext.junit
-    androidTestImplementation libs.espresso.core
-
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
+    
     // WorkManager
-    implementation libs.work.runtime.ktx
-
+    implementation 'androidx.work:work-runtime-ktx:2.8.1'
+    
     // Glide for image loading
-    implementation libs.glide
-    ksp libs.compiler
-
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    implementation 'com.github.bumptech.glide:annotations:4.16.0'
+    ksp 'com.github.bumptech.glide:compiler:4.16.0'
+    
     // Timber for logging
-    implementation libs.timber
+    implementation 'com.jakewharton.timber:timber:5.0.1'
+    
+    // Testing
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

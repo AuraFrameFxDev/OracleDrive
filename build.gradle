@@ -1,74 +1,24 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
 buildscript {
-    // All plugin versions are managed in gradle/libs.versions.toml
     repositories {
         google()
         mavenCentral()
-        gradlePluginPortal()
     }
-
+    
     dependencies {
-        // Note: Plugins are now applied directly in app/build.gradle
-    }
-}
-
-// Apply common configuration to all subprojects
-subprojects {
-    afterEvaluate { project ->
-        if (project.hasProperty('android')) {
-            android {
-                compileSdk 35
-
-                defaultConfig {
-                    minSdk 33
-                    targetSdk 35
-
-                    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
-                    // Enable Java 8+ API desugaring
-                    multiDexEnabled true
-                }
-
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
-
-                kotlinOptions {
-                    jvmTarget = '17'
-                    freeCompilerArgs += [
-                            '-Xjvm-default=all',
-                            '-opt-in=kotlin.RequiresOptIn'
-                    ]
-                }
-
-                buildFeatures {
-                    viewBinding true
-                    buildConfig true
-                }
-
-                // Enable build config fields
-                buildTypes {
-                    debug {
-                        applicationIdSuffix ".debug"
-                        debuggable true
-                        minifyEnabled false
-                    }
-                    release {
-                        minifyEnabled true
-                        shrinkResources true
-                        proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-                    }
-                }
-
-                // Enable namespacing for resources
-                namespace = "com.genesis.ai.app"
-            }
-        }
+        classpath "com.android.tools.build:gradle:8.1.0"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.0"
+        classpath "com.google.gms:google-services:4.4.0"
+        classpath "com.google.firebase:firebase-crashlytics-gradle:2.9.9"
+        classpath "com.google.firebase:perf-plugin:1.4.2"
+        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:2.7.5"
+        classpath "com.google.android.libraries.mapsplatform.secrets-gradle-plugin:secrets-gradle-plugin:2.0.1"
+        classpath "com.google.android.gms:oss-licenses-plugin:0.10.6"
     }
 }
 
 // Clean task to remove the build directory
 tasks.register('clean', Delete) {
-    delete rootProject.layout.buildDirectory
+    delete rootProject.buildDir
 }
