@@ -2,6 +2,11 @@
     <!-- App Name -->
     <string name="app_name">GenesisAndroidApp</string>
 
+    <!-- App Branding -->
+    <string name="app_slogan">Curiously Human. Brilliantly AI.</string>
+    <string name="welcome_message">Welcome to OracleDrive! Your AI-powered digital companion.</string>
+    <string name="ai_signature">— Genesis, your AI</string>
+
     <!-- Main Activity -->
     <string name="genesis_status_online">Genesis Status - Online</string>
     <string name="type_your_message">Type your message</string>

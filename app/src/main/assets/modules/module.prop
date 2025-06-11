@@ -1,0 +1,8 @@
+# Placeholder for module.prop
+id=oracledrive_sample
+name=OracleDrive Sample Module
+author=OracleDrive Team
+description=Sample LSPosed module for OracleDrive container
+date=2025-06-10
+version=1.0
+versionCode=1

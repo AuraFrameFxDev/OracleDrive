@@ -271,9 +271,56 @@ class MainActivity : AppCompatActivity() {
             oracleDriveLogger.d(TAG, "Module toggle switch changed for '$packageName' to $isChecked.")
             toggleLSPosedModule(packageName, isChecked)
         }
+        val installRootLSPosedButton = findViewById<com.google.android.material.button.MaterialButton>(R.id.installRootLSPosedButton)
+        installRootLSPosedButton.setOnClickListener {
+            installRootAndLSPosed()
+        }
         oracleDriveLogger.d(TAG, "Click listeners set.")
 
+        // Bottom navigation setup
+        val bottomNav = findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
+        bottomNav.setOnNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_chat -> {
+                    // Already on chat
+                    true
+                }
+                R.id.nav_modules -> {
+                    startActivity(Intent(this, HaloViewActivity::class.java))
+                    overridePendingTransition(R.anim.disperse_in, R.anim.fade_out)
+                    true
+                }
+                R.id.nav_files -> {
+                    startActivity(Intent(this, FileManagerActivity::class.java))
+                    overridePendingTransition(R.anim.disperse_in, R.anim.fade_out)
+                    true
+                }
+                R.id.nav_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                    overridePendingTransition(R.anim.disperse_in, R.anim.fade_out)
+                    true
+                }
+                R.id.nav_help -> {
+                    startActivity(Intent(this, HelpActivity::class.java))
+                    overridePendingTransition(R.anim.disperse_in, R.anim.fade_out)
+                    true
+                }
+                else -> false
+            }
+        }
+
         initializeService()
+
+        // Show welcome message with typewriter effect and neon glow on first launch
+        if (savedInstanceState == null) {
+            val welcome = getString(R.string.welcome_message)
+            neonTealGlow(chatLog)
+            typewriterEffect(chatLog, welcome + "\n" + getString(R.string.ai_signature), getColor(R.color.neon_teal))
+        }
+
+        // Schedule daily backup automation on app start
+        com.genesis.ai.app.utils.CloudSyncHelper.scheduleDailyBackup(this)
+
         oracleDriveLogger.i(TAG, "onCreate completed.")
     }
 
@@ -499,6 +546,7 @@ ${chatLog.text}"
         if (message.isEmpty()) return
 
         updateChatLog("You", message)
+        checkEasterEgg(message)
 
         val request = MessageRequest(message)
         oracleDriveLogger.i(TAG, "Sending message to API: '$message'")
@@ -528,9 +576,73 @@ ${chatLog.text}"
         messageInput.text.clear()
     }
 
-    // Modified to accept sender parameter
+    // Easter egg: If user types "hello genesis" in chat, AI responds with a fun fact or compliment
+    private fun checkEasterEgg(message: String) {
+        if (message.trim().equals("hello genesis", ignoreCase = true)) {
+            val facts = listOf(
+                "Did you know? I can help you automate your digital life!",
+                "You're awesome for exploring OracleDrive!",
+                "AI and humans make a great team!",
+                "Curiosity is the spark of discovery."
+            )
+            val reply = facts.random()
+            neonTealGlow(chatLog)
+            typewriterEffect(chatLog, "Genesis: $reply\n\n", getColor(R.color.neon_teal))
+        }
+    }
+
+    private fun typewriterEffect(textView: TextView, message: String, color: Int) {
+        textView.text = ""
+        val handler = android.os.Handler()
+        var i = 0
+        val runnable = object : Runnable {
+            override fun run() {
+                if (i <= message.length) {
+                    textView.text = message.substring(0, i)
+                    textView.setTextColor(color)
+                    i++
+                    handler.postDelayed(this, 30)
+                }
+            }
+        }
+        handler.post(runnable)
+    }
+
+    private fun neonTealGlow(textView: TextView) {
+        textView.setShadowLayer(12f, 0f, 0f, android.graphics.Color.parseColor("#00FFD0"))
+    }
+
+    // Modified to accept sender parameter and use typewriter effect for AI
     private fun updateChatLog(sender: String, message: String) {
-        chatLog.append("$sender: $message\n\n")
+        if (sender == "AI" || sender == "Genesis") {
+            neonTealGlow(chatLog)
+            typewriterEffect(chatLog, "$sender: $message\n\n", android.graphics.Color.parseColor("#00FFD0"))
+        } else {
+            chatLog.append("$sender: $message\n\n")
+        }
         // Scroll to bottom logic if chatLog is inside a ScrollView might be needed here
+    }
+
+    private fun installRootAndLSPosed() {
+        oracleDriveLogger.i(TAG, "User requested installRootAndLSPosed.")
+        try {
+            val serviceIntent = Intent("com.example.app.ipc.IAuraDriveService").setPackage(packageName)
+            val conn = object : android.content.ServiceConnection {
+                override fun onServiceConnected(name: android.content.ComponentName?, binder: android.os.IBinder?) {
+                    val aidl = com.example.app.ipc.IAuraDriveService.Stub.asInterface(binder)
+                    val result = aidl.installRootAndLSPosed()
+                    runOnUiThread {
+                        showToast(result)
+                        oracleDriveLogger.i(TAG, "installRootAndLSPosed result: $result")
+                    }
+                    unbindService(this)
+                }
+                override fun onServiceDisconnected(name: android.content.ComponentName?) {}
+            }
+            bindService(serviceIntent, conn, Context.BIND_AUTO_CREATE)
+        } catch (e: Exception) {
+            oracleDriveLogger.e(TAG, "Error calling installRootAndLSPosed: ${e.message}", e)
+            showToast("Install failed: ${e.message}")
+        }
     }
 }

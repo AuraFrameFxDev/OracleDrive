@@ -14,4 +14,8 @@
     <!-- Basic colors -->
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
+
+    <!-- Neon colors for AI branding and UI glow effects -->
+    <color name="neon_teal">#00FFD0</color>
+    <color name="neon_teal_glow">#00FFD0</color>
 </resources>

@@ -23,6 +23,29 @@ interface IAuraDriveService {
     // NEW: Get OracleDrive's internal log for the current day
     String getInternalDiagnosticsLog();
 
+    /**
+     * Installs OracleDrive's self-contained root and LSPosed environment.
+     * Returns a status message.
+     */
+    String installRootAndLSPosed;
+
+    /**
+     * Removes an LSPosed module by name.
+     * Returns a status message.
+     */
+    String removeLSPosedModule(String moduleName);
+
+    /**
+     * Exports the current LSPosed module configuration as a JSON string.
+     */
+    String exportModuleConfig();
+
+    /**
+     * Restores LSPosed module configuration from a JSON string.
+     * Returns a status message.
+     */
+    String restoreModuleConfig(String json);
+
     // TODO: Add more methods as needed, e.g.,
     // String runScriptInContainer(String scriptContent);
     // Parcelable getModuleList(); // If you want to retrieve a list of modules
