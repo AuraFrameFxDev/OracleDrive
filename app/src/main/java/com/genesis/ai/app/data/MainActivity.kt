@@ -231,6 +231,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Initializes the main activity, setting up UI components, event listeners, navigation, and services.
+     *
+     * This method configures the chat interface, file import/export, module toggling, and navigation bar.
+     * It also initializes logging, Firebase authentication, and background services. On first launch, a welcome
+     * message is displayed with special effects, and daily backup scheduling is triggered.
+     *
+     * @param savedInstanceState The previously saved instance state, or null if starting fresh.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Initialize logger first
@@ -540,6 +549,11 @@ ${chatLog.text}"
         }
     }
 
+    /**
+     * Sends the user's input message to the AI backend and updates the chat log with the response.
+     *
+     * If the input is empty, the function does nothing. After sending, the user's message is displayed in the chat log. If the message matches a specific Easter egg phrase, a special response is triggered. The AI's response or any error message is appended to the chat log accordingly.
+     */
     private fun sendMessage() {
         val message = messageInput.text.toString().trim()
         oracleDriveLogger.d(TAG, "sendMessage called. Message empty: ${message.isEmpty()}")
@@ -576,7 +590,11 @@ ${chatLog.text}"
         messageInput.text.clear()
     }
 
-    // Easter egg: If user types "hello genesis" in chat, AI responds with a fun fact or compliment
+    /**
+     * Checks if the input message triggers the "hello genesis" Easter egg and, if so, displays a random fun fact or compliment in the chat log with special effects.
+     *
+     * @param message The user's chat message to evaluate for the Easter egg trigger.
+     */
     private fun checkEasterEgg(message: String) {
         if (message.trim().equals("hello genesis", ignoreCase = true)) {
             val facts = listOf(
@@ -591,6 +609,15 @@ ${chatLog.text}"
         }
     }
 
+    /**
+     * Animates the display of a message in a TextView with a typewriter effect and specified text color.
+     *
+     * Each character of the message appears sequentially with a short delay, creating a typewriter-like animation.
+     *
+     * @param textView The TextView where the animated text will be displayed.
+     * @param message The message to display with the typewriter effect.
+     * @param color The color to apply to the text.
+     */
     private fun typewriterEffect(textView: TextView, message: String, color: Int) {
         textView.text = ""
         val handler = android.os.Handler()
@@ -608,11 +635,23 @@ ${chatLog.text}"
         handler.post(runnable)
     }
 
+    /**
+     * Applies a neon teal glow effect to the specified TextView.
+     *
+     * @param textView The TextView to style with a teal shadow glow.
+     */
     private fun neonTealGlow(textView: TextView) {
         textView.setShadowLayer(12f, 0f, 0f, android.graphics.Color.parseColor("#00FFD0"))
     }
 
-    // Modified to accept sender parameter and use typewriter effect for AI
+    /**
+     * Updates the chat log with a new message from the specified sender.
+     *
+     * Applies a neon glow and typewriter animation for messages from "AI" or "Genesis"; otherwise, appends the message normally.
+     *
+     * @param sender The name of the message sender.
+     * @param message The message content to display.
+     */
     private fun updateChatLog(sender: String, message: String) {
         if (sender == "AI" || sender == "Genesis") {
             neonTealGlow(chatLog)
@@ -623,6 +662,11 @@ ${chatLog.text}"
         // Scroll to bottom logic if chatLog is inside a ScrollView might be needed here
     }
 
+    /**
+     * Initiates installation of root access and LSPosed by binding to a remote IPC service and invoking its installation method.
+     *
+     * Displays the result of the installation as a toast message. Handles and logs any exceptions that occur during the process.
+     */
     private fun installRootAndLSPosed() {
         oracleDriveLogger.i(TAG, "User requested installRootAndLSPosed.")
         try {

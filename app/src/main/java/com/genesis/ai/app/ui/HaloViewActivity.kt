@@ -5,6 +5,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.genesis.ai.app.R
 
 class HaloViewActivity : AppCompatActivity() {
+    /**
+     * Initializes the HaloViewActivity, sets up the UI, and binds to services for module state visualization and file operations.
+     *
+     * Configures the activity's theme based on system night mode, displays a graphical view of module states by fetching data from the AuraDriveService, and sets up UI buttons for backup, restore, file management, help, cleaning unused files, and cloud sync placeholders. Handles service connections and user interactions for these features.
+     *
+     * @param savedInstanceState The previously saved instance state, if any.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_halo_view)
@@ -112,7 +119,15 @@ class HaloViewActivity : AppCompatActivity() {
         }
     }
 
-    // Helper to parse moduleStates from JSON
+    /**
+     * Parses a JSON string to extract a map of module names to their boolean states.
+     *
+     * The JSON is expected to contain a "moduleStates" object mapping module names to boolean values.
+     * Returns an empty map if parsing fails or the expected structure is not present.
+     *
+     * @param json The JSON string containing module state information.
+     * @return A map where keys are module names and values indicate their boolean states.
+     */
     fun parseModuleStatesFromJson(json: String): Map<String, Boolean> {
         return try {
             val obj = com.google.gson.JsonParser.parseString(json).asJsonObject
@@ -123,6 +138,12 @@ class HaloViewActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Handles the result from activities started for a result, specifically processing module configuration restore requests.
+     *
+     * If the result is from the file picker activity (request code 2001) and is successful, retrieves the selected JSON configuration,
+     * binds to the `IAuraDriveService` to restore the module configuration, and displays the result in a toast message.
+     */
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 2001 && resultCode == RESULT_OK) {

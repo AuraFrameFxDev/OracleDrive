@@ -17,6 +17,14 @@ class FileManagerActivity : AppCompatActivity() {
     private lateinit var adapter: FileAdapter
     private var currentDir: File = File("/data/adb/modules")
 
+    /**
+     * Initializes the file manager activity, setting up the UI and displaying the contents of the root directory.
+     *
+     * Sets the layout, configures the RecyclerView with a file adapter, and loads the initial list of files and directories.
+     * Handles item clicks to navigate into directories or open files.
+     *
+     * @param savedInstanceState The previously saved instance state, if any.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_file_manager)
@@ -34,12 +42,22 @@ class FileManagerActivity : AppCompatActivity() {
         loadFiles()
     }
 
+    /**
+     * Loads and displays the contents of the current directory, sorting directories before files and updating the activity title.
+     */
     private fun loadFiles() {
         val files = currentDir.listFiles()?.sortedWith(compareBy({ !it.isDirectory }, { it.name })) ?: emptyList()
         adapter.submitList(files)
         title = currentDir.absolutePath
     }
 
+    /**
+     * Attempts to open the specified file using an appropriate external app.
+     *
+     * If no suitable app is available to handle the file, displays a toast message to inform the user.
+     *
+     * @param file The file to be opened.
+     */
     private fun openFile(file: File) {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.setDataAndType(Uri.fromFile(file), "*/*")
@@ -51,6 +69,11 @@ class FileManagerActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Handles the back button press to navigate up one directory level if possible.
+     *
+     * If the current directory is not the root (`/data/adb/modules`), navigates to its parent directory and reloads the file list. Otherwise, performs the default back action.
+     */
     override fun onBackPressed() {
         if (currentDir.parentFile != null && currentDir.absolutePath != "/data/adb/modules") {
             currentDir = currentDir.parentFile

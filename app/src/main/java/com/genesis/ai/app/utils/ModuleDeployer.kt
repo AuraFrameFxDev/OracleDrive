@@ -5,10 +5,13 @@ import java.io.File
 
 object ModuleDeployer {
     /**
-     * Deploys a module to the target LSPosed modules directory (requires root)
-     * @param context Context
-     * @param moduleName Name of the module directory
-     * @return true if deployment was successful
+     * Deploys a sample LSPosed module to the target modules directory on a rooted device.
+     *
+     * Extracts the sample module files and copies them to `/data/adb/modules/{moduleName}`, setting appropriate permissions and ownership.
+     *
+     * @param context The Android context used for resource access.
+     * @param moduleName The name of the module directory to deploy to. Defaults to "oracledrive_sample".
+     * @return `true` if the deployment succeeds, `false` otherwise.
      */
     fun deploySampleModule(context: Context, moduleName: String = "oracledrive_sample"): Boolean {
         val (prop, sh, jar) = RootInstaller.extractSampleModule(context)
@@ -26,7 +29,13 @@ object ModuleDeployer {
         return ShellUtils.runAsRoot(commands)
     }
 
-    // Utility: Clean up unused module files in /data/adb/modules
+    /**
+     * Removes extraneous files from all LSPosed module directories under `/data/adb/modules`.
+     *
+     * Only files named "module.prop", "service.sh", "sample_module.jar", and "enable" are retained in each module directory; all others are deleted.
+     *
+     * @return The total number of files deleted across all module directories.
+     */
     fun cleanUnusedModuleFiles(): Int {
         val modulesDir = java.io.File("/data/adb/modules")
         val modules = modulesDir.listFiles()?.filter { it.isDirectory } ?: emptyList()
