@@ -130,7 +130,7 @@ kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref =
 google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
 
 # Firebase
-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "2.9.9" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.4" }
 firebase-perf = { id = "com.google.firebase.perf", version = "1.4.2" }
 
 # Google Maps
