@@ -1,6 +1,6 @@
 [versions]
 # Core
-compiler = "4.15.1"
+compiler = "4.16.0"
 secretsGradlePlugin = "2.0.1"  # Google Maps Secrets Gradle Plugin version
 desugar_jdk_libs = "2.1.5"
 glide = "4.16.0"
