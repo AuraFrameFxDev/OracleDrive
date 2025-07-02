@@ -32,12 +32,25 @@ class HaloGraphView @JvmOverloads constructor(
     private var nodes: List<ModuleNode> = emptyList()
     private var edges: List<ModuleEdge> = emptyList()
 
+    /**
+     * Updates the graph data with the provided nodes and edges, and triggers a redraw of the view.
+     *
+     * @param nodes The list of nodes to display in the graph.
+     * @param edges The list of edges representing connections between nodes.
+     */
     fun setGraphData(nodes: List<ModuleNode>, edges: List<ModuleEdge>) {
         this.nodes = nodes
         this.edges = edges
         invalidate()
     }
 
+    /**
+     * Renders the graph by drawing nodes as circles and edges as lines on the canvas.
+     *
+     * Blocked edges are drawn with a distinct style. Node labels are displayed near each node.
+     *
+     * @param canvas The canvas on which the graph is drawn.
+     */
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         // Draw edges

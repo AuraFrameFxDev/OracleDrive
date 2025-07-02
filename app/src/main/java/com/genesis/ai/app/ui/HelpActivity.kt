@@ -9,6 +9,13 @@ import androidx.appcompat.app.AppCompatActivity
 import com.genesis.ai.app.R
 
 class HelpActivity : AppCompatActivity() {
+    /**
+     * Displays a help dialog with information about LSPosed Manager features when the activity is created.
+     *
+     * The dialog presents HTML-formatted instructions and tips covering modules management, backup and restore, file management, dark mode, security advice, and support contact details. The dialog is shown immediately upon activity launch and can be dismissed with the "OK" button.
+     *
+     * @param savedInstanceState The previously saved instance state, if any.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val helpText = """
