@@ -37,7 +37,12 @@ object CloudSyncHelper {
      * @param onProgress Callback invoked with upload progress as a percentage (0.0 to 100.0).
      * @return The ID of the uploaded Drive file, or null if unsuccessful.
      */
-    fun uploadBackupToDrive(service: Drive, file: File, folderId: String? = null, onProgress: (Double) -> Unit = {}): String? {
+    fun uploadBackupToDrive(
+        service: Drive,
+        file: File,
+        folderId: String? = null,
+        onProgress: (Double) -> Unit = {}
+    ): String? {
         val gFile = GDriveFile().apply {
             name = file.name
             mimeType = "application/json"
@@ -47,9 +52,15 @@ object CloudSyncHelper {
         val insert = service.files().create(gFile, mediaContent)
         val uploader = insert.mediaHttpUploader
         uploader.chunkSize = MediaHttpUploader.MINIMUM_CHUNK_SIZE
-        uploader.progressListener = MediaHttpUploaderProgressListener { onProgress(it.progress * 100) }
-        val result = insert.execute()
-        return result.id
+        uploader.progressListener = MediaHttpUploaderProgressListener {
+            onProgress(it.progress * 100)
+        }
+        return try {
+            insert.execute()?.id
+        } catch (e: IOException) {
+            Log.e("CloudSync", "Upload failed", e)
+            null
+        }
     }
 
     /**
