@@ -68,7 +68,7 @@ class HaloViewActivity : AppCompatActivity() {
             val serviceIntent = android.content.Intent("com.example.app.ipc.IAuraDriveService").setPackage(packageName)
             val conn = object : android.content.ServiceConnection {
                 override fun onServiceConnected(name: android.content.ComponentName?, binder: android.os.IBinder?) {
-                    val aidl = com.example.app.ipc.IAuraDriveService.Stub.asInterface(binder)
+                    val aidl = com.genesis.ai.app.ipc.IAuraDriveService.Stub.asInterface(binder)
                     val configJson = aidl.exportModuleConfig()
                     // Save to file
                     val file = java.io.File(getExternalFilesDir(null), "lsposed_backup_${System.currentTimeMillis()}.json")
