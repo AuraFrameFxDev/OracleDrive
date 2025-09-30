@@ -7,4 +7,4 @@ alembic==1.16.2
 pydantic[email]==2.11.7
 python-jose[cryptography]==3.5.0
 firebase-admin==6.9.0
-google-cloud-aiplatform==1.98.0
+google-cloud-aiplatform==1.117.0
