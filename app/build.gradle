@@ -6,9 +6,6 @@ plugins {
     // Comment out Firebase/Google plugins temporarily to allow build without google-services.json
     // Uncomment these when the google-services.json file is available
     id 'com.google.gms.google-services'
-    id 'com.google.firebase.crashlytics'
-    id 'com.google.firebase.perf'
-    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
     id 'androidx.navigation.safeargs.kotlin'
     id 'com.google.android.gms.oss-licenses-plugin'
 }
