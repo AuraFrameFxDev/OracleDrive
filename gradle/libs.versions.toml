@@ -30,7 +30,7 @@ lifecycle = "2.9.1"
 navigation = "2.9.0"
 
 # Firebase
-firebaseBom = "33.15.0"
+firebaseBom = "34.4.0"
 
 # Coroutines
 coroutines = "1.10.2"
