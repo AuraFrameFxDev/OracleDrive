@@ -628,7 +628,7 @@ ${chatLog.text}"
                     textView.text = message.substring(0, i)
                     textView.setTextColor(color)
                     i++
-                    handler.postDelayed(this, 30)
+                    handler.postDelayed(this, TYPEWRITER_DELAY_MS.toLong())
                 }
             }
         }
